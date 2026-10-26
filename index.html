@@ -124,7 +124,7 @@ const eraN=()=>+teamM().inn||(teamM().sport==='base'?9:7);
 const rolesOn=()=>!!teamM().roles;
 const myPlayer=()=>S.players.find(p=>S.me&&p.id===S.me.playerId);
 const isAdmin=()=>{if(!cloud)return true;if(!(S.got.meta&&S.got.players))return false;return !rolesOn()||!!(S.me&&S.me.owner)||!!(myPlayer()&&myPlayer().level==='admin')};
-const ADMIN_ACTS=new Set(['newgame','addp','delp','editp','savet','addl','rml','up','dosub','doswap','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','pedit','addfor']);
+const ADMIN_ACTS=new Set(['newgame','addp','delp','editp','savet','addl','rml','up','dosub','doswap','undolog','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','pedit','addfor']);
 const pn=id=>(S.players.find(p=>p.id===id)||{name:'(削除済)'}).name;
 const fmt=x=>x.toFixed(3).replace(/^0/,'');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -177,7 +177,7 @@ function prevIds(g){let o=S.games.filter(x=>x.id!==g.id&&slotsOf(x).length);
  return slotsOf(o[0]).flatMap(s=>[slotPids(s)[0],s.fp].filter(Boolean))}
 
 const lab=p=>{const r=p.r,d=p.d||'',k=KS[p.k]||'';
- if(r==='四')return'四球';if(r==='死')return'死球';if(r==='振')return'三振';if(r==='振逃')return'振逃';if(r==='野選')return d+'野選';if(r==='併殺')return d+(KS[p.k]||'')+'併';
+ if(r==='四')return'四球';if(r==='死')return'死球';if(r==='振')return'三振';if(r==='振逃')return'振逃';if(r==='野選')return d+(S.runs.some(x=>x.pa===p.id&&x.k==='封殺')?'野選・封殺':'野選');if(r==='併殺')return d+(KS[p.k]||'')+'併';
  if(r==='単')return d+'安';if(r==='二')return d+'二';if(r==='三')return d+'三';if(r==='本')return d+'本';
  if(r==='失')return d+k+'失';if(r==='犠打')return d+'犠打';if(r==='犠飛')return d+'犠飛';if(r==='進')return d+k+'進';return d+k};
 const isHit=r=>'単二三本'.includes(r)&&r.length===1;
@@ -311,7 +311,7 @@ function gameV(){
  const L=slotsOf(g),P=S.pas.filter(p=>p.gid===g.id).sort((a,b)=>a.t-b.t),slOf=p=>p.sl||(L.find(s=>slotPids(s).includes(p.pid))||{}).id;
  const us=nrm(g.sc&&g.sc.us),th=nrm(g.sc&&g.sc.them),au=au9(g);
  const R=S.runs.filter(r=>r.gid===g.id).sort((a,b)=>a.t-b.t),rn0=k=>R.filter(r=>r.k===k).length,rn=(pid,k)=>R.filter(r=>r.pid===pid&&r.k===k).length;
- const logs=L.flatMap((s,i)=>(s.log||[]).map(l=>({...l,n:i+1}))).sort((a,b)=>a.inn-b.inn);
+ const logs=L.flatMap((s,i)=>(s.log||[]).map((l,li,arr)=>({...l,n:i+1,sid:s.id,li,last:li===arr.length-1}))).sort((a,b)=>a.inn-b.inn);
  const adm=isAdmin();if(!adm){if(S.sub==='in')S.sub='paper';S.pedit=false}
  let h=`<div class="row" style="margin-bottom:6px"><button class="g" data-a="back" style="flex:0 0 auto">← 一覧</button><b style="flex:1">${esc(g.date)} vs ${esc(g.opp||'相手')}</b>${adm?`<button class="g" data-a="editg" style="flex:0 0 auto">✎ 試合情報</button>`:''}</div>
 <div class="tabs">${[['in','入力'],['paper','成績'],['book','スコアブック'],['pit','投手']].filter(([k])=>adm||k!=='in').map(([k,l])=>`<button data-a="sub" data-id="${k}" class="${S.sub===k?'on':''}">${l}</button>`).join('')}</div>`;
@@ -347,7 +347,7 @@ function gameV(){
 <p class="note" style="margin:6px 0 0">代打は打順だけを入れ替えます(守備位置は「代打」表示。守備に就く場合は上の守備位置を変更)。守備交代は選手と守備位置を入れ替えます。一度退いた選手も、再度選べます(リエントリー)。</p></div>`}
   if(L.length>1){const so=L.map((s,i)=>[i,(i+1)+'番 '+pn(s.pid)+'('+(s.pos||'-')+')']);
    h+=`<h2>守備位置の入れ替え</h2><div class="card"><div class="row"><select id="sw1">${opt(so,0)}</select><select id="sw2">${opt(so,1)}</select></div><div class="row" style="margin-top:8px"><select id="swi">${opt(innOpts(g,()=>0),S.inn)}</select><button class="b" data-a="doswap" style="flex:0 0 auto">入れ替える</button></div><p class="note" style="margin:6px 0 0">出場している選手どうしの守備位置を入れ替えます(例: 投手と一塁手の入れ替え)。ベンチの選手との交代は、上の「選手交代」を使います。</p></div>`}
-  if(logs.length)h+=`<div class="card note">${logs.map(l=>esc(logTxt(l))).join('<br>')}</div>`;
+  if(logs.length)h+=`<div class="card"><div class="note" style="margin-bottom:4px">交代の履歴(各打順の、いちばん新しい交代だけ取り消せます)</div>${logs.map(l=>`<div class="pa"><span>${esc(logTxt(l))}</span>${l.last?`<button class="x" data-a="undolog" data-id="${l.sid}:${l.li}" style="flex:0 0 auto;min-width:0">取消</button>`:''}</div>`).join('')}</div>`;
 
   /* 打席入力 */
   const mi=maxInn(g);
@@ -527,16 +527,23 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  else if(a==='dosub'){const k=$('#sk').value,si=+$('#ss').value,np=$('#sp').value,inn=+$('#si').value,q=$('#sq').value,L2=cp(slotsOf(g)),s=L2[si];
   if(!np||!s)return;if(k==='守備'&&!q)return alert('守備位置を選んでください');
   if(s.fp&&k==='守備'&&q!=='DP')return alert('このDPにはFPが設定されています。先にFPを解除してください');
-  s.log.push({k:k==='代打'?'代打':'守備交代',inn,from:s.pid,to:np,pos:k==='代打'?'':q});
+  s.log.push({k:k==='代打'?'代打':'守備交代',inn,from:s.pid,to:np,pos:k==='代打'?'':q,ppos:s.pos});
   s.pid=np;s.pos=k==='代打'?((s.pos==='DP'||s.pos==='DH')?s.pos:'代'):q;S.inn=inn;saveSlots(g,L2)}
  else if(a==='doswap'){const i1=+$('#sw1').value,i2=+$('#sw2').value,inn=+$('#swi').value;if(i1===i2)return alert('別の選手を選んでください');
   const L2=cp(slotsOf(g)),A=L2[i1],B=L2[i2];if(!A||!B)return;
   if(A.fp||B.fp)return alert('FPが設定されているDPは入れ替えできません。先にFPを解除してください');
   const pa=A.pos,pb=B.pos;A.pos=pb;B.pos=pa;A.log.push({k:'守備入替',inn,from:A.pid,to:A.pid,pos:pb,other:B.pid,opos:pa});S.inn=inn;saveSlots(g,L2)}
+ else if(a==='undolog'){const[sid,li]=id.split(':'),L2=cp(slotsOf(g)),s=L2.find(x=>x.id===sid);if(!s)return;const e=s.log[+li];
+  if(!e||+li!==s.log.length-1)return alert('この打順の、後の交代を先に取り消してください');
+  if(!confirm('この交代を取り消しますか?\n'+logTxt({...e,n:L2.indexOf(s)+1})+(e.k!=='守備入替'&&e.ppos===undefined?'\n(元の守備位置の記録がないため、守備位置は空欄に戻ります)':'')))return;
+  if(e.k==='守備入替'){const o=L2.find(x=>x.pid===e.other);if(!o||s.pos!==e.pos||o.pos!==e.opos)return alert('その後に守備位置が変更されているため、取り消せません。先にそちらを戻してください');s.pos=e.opos;o.pos=e.pos}
+  else if(e.k==='FP解除'){if(S.pas.some(p=>p.gid===g.id&&p.pid===e.to&&(p.sl===sid||!p.sl)))return alert('FPだった選手の打席記録が残っています。先に、その打席記録を削除してください');s.pid=e.from;s.pos=e.ppos||'DP';s.fp=e.to;s.fpPos=e.pos||''}
+  else{if(S.pas.some(p=>p.gid===g.id&&p.pid===e.to&&(p.sl===sid||!p.sl)))return alert('交代で入った選手の打席記録が残っています。先に、その打席記録を削除(または別の選手に修正)してください');s.pid=e.from;s.pos=e.ppos!==undefined?e.ppos:''}
+  s.log.pop();saveSlots(g,L2)}
  else if(a==='setfp'){const pv=document.querySelector(`[data-fps="${id}"]`).value,pp=document.querySelector(`[data-fpp="${id}"]`).value;if(!pv||!pp)return alert('FPの選手と守備位置を選んでください');const L2=cp(slotsOf(g));L2[+id].fp=pv;L2[+id].fpPos=pp;saveSlots(g,L2)}
  else if(a==='clrfp'){const L2=cp(slotsOf(g));L2[+id].fp='';L2[+id].fpPos='';saveSlots(g,L2)}
  else if(a==='relfp'){const inn=+prompt('FPを解除して、DPの打順に入れます。何回からですか?(1-9)',S.inn);if(!inn||inn<1||inn>9)return;const L2=cp(slotsOf(g)),s=L2[+id];
-  s.log.push({k:'FP解除',inn,from:s.pid,to:s.fp,pos:s.fpPos||''});s.pid=s.fp;s.pos=s.fpPos||'';s.fp='';s.fpPos='';saveSlots(g,L2)}
+  s.log.push({k:'FP解除',inn,from:s.pid,to:s.fp,pos:s.fpPos||'',ppos:s.pos});s.pid=s.fp;s.pos=s.fpPos||'';s.fp='';s.fpPos='';saveSlots(g,L2)}
  else if(a==='addpa'){const r=$('#r').value,no=NOBALL.includes(r),d=$('#d').value;
   if(!no&&!d)return alert('打球の方向を選んでください');
   const[slid,pid]=$('#b').value.split(':'),inn=+$('#inn').value,rbi=+$('#rbi').value,o0=S.pas.find(p=>p.id===S.edit);
@@ -662,7 +669,7 @@ document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='gd')S.guideOp
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261026001619';
+const APP_VER='20261026053545';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false}}catch(e){}}
