@@ -68,6 +68,10 @@ tr.t td{font-weight:900;background:#f4f7f4}
 .ab.on.y{background:#2e7d32;color:#fff;border-color:#2e7d32}
 .ab.on.m{background:#e09b00;color:#fff;border-color:#e09b00}
 .bk td.bc{padding:2px;min-width:66px;text-align:center;vertical-align:middle}
+.lr{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.lr.drag{opacity:.9;background:#eaf3ec;box-shadow:0 2px 10px rgba(0,0,0,.3);position:relative;z-index:5;border-radius:8px}
+.lr.over{box-shadow:0 -3px 0 #1b5e3b}
+.grip{color:#789;margin-right:2px;cursor:grab;touch-action:none;padding:4px 2px}
 .card summary{font-weight:700;cursor:pointer}
 .ab.on.n{background:#c62828;color:#fff;border-color:#c62828}
 </style></head><body>
@@ -98,15 +102,16 @@ function del(c,id){
 
 function onErr(e){if(e&&e.code==='permission-denied'&&S.team){delete LS['mem:'+S.team+':'+S.uid];unsubs.forEach(u=>u());unsubs=[];S.team='';S.me=null;S.msg='このチームの閲覧権限がありません。合言葉を入力してください';draw()}}
 const DIRS=['投','捕','一','二','三','遊','左','中','右'],FPOS=DIRS,KINDS=['ゴロ','ライナー','フライ'],KS={ゴロ:'ゴ',ライナー:'直',フライ:'飛'};
-const RES=[['単','安打(単打)'],['二','長打(二塁打)'],['三','長打(三塁打)'],['本','長打(本塁打)'],['失','エラー'],['out','アウト'],['進','アウト(進塁打)'],['犠打','アウト(犠打)'],['犠飛','アウト(犠飛)'],['併殺','アウト(併殺打・2アウト)'],['四','四球'],['死','死球'],['振','三振(アウト)'],['振逃','三振(振り逃げ)'],['野選','野選(フィールダースチョイス)']];
+const RES=[['単','安打(単打)'],['二','長打(二塁打)'],['三','長打(三塁打)'],['本','長打(本塁打)'],['失','エラー'],['out','アウト'],['進','アウト(進塁打)'],['犠打','アウト(犠打)'],['犠飛','アウト(犠飛)'],['併殺','アウト(併殺打・2アウト)'],['四','四球'],['死','死球'],['振','三振(アウト)'],['振逃','三振(振り逃げ)'],['野選','野選・封殺(打者は出塁)']];
 const REACH=['単','二','三','本','失','野選','四','死','振逃'];
 const NOBALL=['四','死','振','振逃'];
 const isOut=r=>['out','進','犠打','犠飛','振','併殺'].includes(r);
 const outN=r=>r==='併殺'?2:isOut(r)?1:0;
-const RK=[['得点','得点'],['盗塁','盗塁'],['盗塁死','盗塁死(アウト)'],['走塁死','走塁死(アウト)'],['暴投','進塁(暴投)'],['捕逸','進塁(捕逸)']],RS={併殺走者:'併',得点:'得',盗塁:'盗',盗塁死:'盗死',走塁死:'走死',暴投:'暴',捕逸:'捕'},RLAB={併殺走者:'併殺(走者アウト)',得点:'得点',盗塁:'盗塁',盗塁死:'盗塁死',走塁死:'走塁死',暴投:'進塁(暴投)',捕逸:'進塁(捕逸)'};
+const RK=[['得点','得点'],['盗塁','盗塁'],['盗塁死','盗塁死(アウト)'],['走塁死','走塁死(アウト)'],['暴投','進塁(暴投)'],['捕逸','進塁(捕逸)']],RS={封殺:'封',併殺走者:'併',得点:'得',盗塁:'盗',盗塁死:'盗死',走塁死:'走死',暴投:'暴',捕逸:'捕'},RLAB={封殺:'封殺(走者アウト)',併殺走者:'併殺(走者アウト)',得点:'得点',盗塁:'盗塁',盗塁死:'盗塁死',走塁死:'走塁死',暴投:'進塁(暴投)',捕逸:'進塁(捕逸)'};
+const runLab=r=>RLAB[r.k]+(r.k==='封殺'&&r.b?' '+(r.b==='H'?'本塁':r.b+'塁'):'');
 const short=t=>[...String(t||'')].slice(0,3).join('');
 const POS=[['','守備'],...DIRS,'DP','DH',['代','代打'],'控'];
-const S={team:LS.team||'',uid:'',me:null,ready:!cloud,msg:'',lmode:'join',guideOpen:false,bk:'news',dpSel:'',got:{},linkFail:'',meta:[],players:[],games:[],pas:[],runs:[],pitch:[],pedit:false,pre:null,pe:null,scSel:[],events:[],att:[],evForm:null,evOpen:null,showPast:false,appName:'',tab:'sched',gid:null,sub:'in',inn:1,edit:null,f:{season:'',tourn:'',type:''}};
+const S={team:LS.team||'',uid:'',me:null,ready:!cloud,msg:'',lmode:'join',guideOpen:false,bk:'news',dpSel:'',foBase:'',got:{},linkFail:'',meta:[],players:[],games:[],pas:[],runs:[],pitch:[],pedit:false,pre:null,pe:null,scSel:[],events:[],att:[],evForm:null,evOpen:null,showPast:false,appName:'',tab:'sched',gid:null,sub:'in',inn:1,edit:null,f:{season:'',tourn:'',type:''}};
 let unsubs=[];
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -119,7 +124,7 @@ const eraN=()=>+teamM().inn||(teamM().sport==='base'?9:7);
 const rolesOn=()=>!!teamM().roles;
 const myPlayer=()=>S.players.find(p=>S.me&&p.id===S.me.playerId);
 const isAdmin=()=>{if(!cloud)return true;if(!(S.got.meta&&S.got.players))return false;return !rolesOn()||!!(S.me&&S.me.owner)||!!(myPlayer()&&myPlayer().level==='admin')};
-const ADMIN_ACTS=new Set(['newgame','addp','delp','editp','savet','addl','rml','up','dosub','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','pedit','addfor']);
+const ADMIN_ACTS=new Set(['newgame','addp','delp','editp','savet','addl','rml','up','dosub','doswap','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','pedit','addfor']);
 const pn=id=>(S.players.find(p=>p.id===id)||{name:'(削除済)'}).name;
 const fmt=x=>x.toFixed(3).replace(/^0/,'');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -134,24 +139,27 @@ const ent=v=>v!=null&&v!=='';
 const nrm=a=>Array.from({length:9},(_,i)=>a&&ent(a[i])?+a[i]:null);
 const au9=g=>Array.from({length:9},(_,i)=>!!(g.auto&&g.auto[i]));
 const maxInn=g=>{let m=0;nrm(g.sc&&g.sc.us).forEach((v,i)=>{if(v!=null)m=i+1});return m};
-const outsIn=(g,inn,ex)=>S.pas.filter(p=>p.gid===g.id&&+p.inn===+inn&&p.id!==ex).reduce((a,p)=>a+outN(p.r),0)+S.runs.filter(r=>r.gid===g.id&&+r.inn===+inn&&(r.k==='盗塁死'||r.k==='走塁死')).length;
+const outsIn=(g,inn,ex)=>S.pas.filter(p=>p.gid===g.id&&+p.inn===+inn&&p.id!==ex).reduce((a,p)=>a+outN(p.r),0)+S.runs.filter(r=>r.gid===g.id&&+r.inn===+inn&&r.pa!==ex&&(r.k==='盗塁死'||r.k==='走塁死'||r.k==='封殺')).length;
 const maxThem=g=>{let m=0;nrm(g.sc&&g.sc.them).forEach((v,i)=>{if(v!=null)m=i+1});return m};
 const at9=g=>Array.from({length:9},(_,i)=>!!(g.autoT&&g.autoT[i]));
 const pOuts=(g,inn,ex)=>sum(S.pitch.filter(p=>p.gid===g.id&&+p.inn===+inn&&p.id!==ex).map(p=>p.o));
 const pRuns=(g,inn,ex)=>sum(S.pitch.filter(p=>p.gid===g.id&&+p.inn===+inn&&p.id!==ex).map(p=>p.r));
+const capU=(g,i)=>{const us=nrm(g.sc&&g.sc.us),au=au9(g);return ent(us[i])&&!au[i]&&us[i]>=1?us[i]:null};
+const capT=(g,i)=>{const th=nrm(g.sc&&g.sc.them),at=at9(g);return ent(th[i])&&!at[i]&&th[i]>=1?th[i]:null};
+const innOpts=(g,f)=>Array.from({length:9},(_,i)=>[i+1,(i+1)+'回'+(i+1>eraN()?'(延長)':'')+(f(i+1)>=3?'(3アウト)':'')]);
 function autoThem(g,inn,list){const th=nrm(g.sc&&g.sc.them),us=nrm(g.sc&&g.sc.us),at=at9(g),i=inn-1;
- if(!(ent(th[i])&&!at[i])){const s=sum(list.filter(p=>+p.inn===+inn).map(p=>p.r));if(s>0){th[i]=s;at[i]=true}else if(at[i]){th[i]=null;at[i]=false}}
+ if(capT(g,i)==null){const s=sum(list.filter(p=>+p.inn===+inn).map(p=>p.r));if(s>0){th[i]=s;at[i]=true}else if(at[i]){th[i]=null;at[i]=false}}
  return{...g,sc:{us,them:th},autoT:at}}
 const pst=a=>{const o={o:0,h:0,hr:0,bb:0,hbp:0,so:0,r:0,er:0};a.forEach(x=>{for(const k in o)o[k]+=+x[k]||0});return o};
 const ipS=o=>{const i=Math.floor(o/3),r=o%3;return r?(i?i+' ':'')+r+'/3':String(i)};
 function onBase(g,inn,o){o=o||{};const c={},tb=o.tb==null?Infinity:o.tb;
  S.pas.filter(p=>p.gid===g.id&&+p.inn===+inn&&REACH.includes(p.r)&&p.id!==o.ex&&p.t<tb).forEach(p=>{c[p.pid]=(c[p.pid]||0)+1});
- S.runs.filter(r=>r.gid===g.id&&+r.inn===+inn&&['得点','盗塁死','走塁死','併殺走者'].includes(r.k)&&r.pa!==o.ex&&r.t<tb).forEach(r=>{c[r.pid]=(c[r.pid]||0)-1});
+ S.runs.filter(r=>r.gid===g.id&&+r.inn===+inn&&['得点','盗塁死','走塁死','併殺走者','封殺'].includes(r.k)&&r.pa!==o.ex&&r.t<tb).forEach(r=>{c[r.pid]=(c[r.pid]||0)-1});
  return c}
 const runsIn=(g,inn)=>S.runs.filter(r=>r.gid===g.id&&+r.inn===+inn&&r.k==='得点').length;
 const rbiIn=(g,inn,ex)=>sum(S.pas.filter(p=>p.gid===g.id&&+p.inn===+inn&&p.id!==ex).map(p=>p.rbi));
 function autoApply(g,inn,pas,runs){const us=nrm(g.sc&&g.sc.us),th=nrm(g.sc&&g.sc.them),au=au9(g),i=inn-1;
- if(!(ent(us[i])&&!au[i])){const s=Math.max(sum(pas.filter(p=>+p.inn===+inn).map(p=>p.rbi)),(runs||[]).filter(r=>r.k==='得点'&&+r.inn===+inn).length);
+ if(capU(g,i)==null){const s=Math.max(sum(pas.filter(p=>+p.inn===+inn).map(p=>p.rbi)),(runs||[]).filter(r=>r.k==='得点'&&+r.inn===+inn).length);
   if(s>0){us[i]=s;au[i]=true}else if(au[i]){us[i]=null;au[i]=false}}
  return{...g,sc:{us,them:th},auto:au}}
 
@@ -189,6 +197,8 @@ ${cloud?`<div class="row" style="margin-top:8px"><input id="tcode" type="passwor
 <button class="b" style="margin-top:8px;width:100%" data-a="${nw?'mkteam':'join'}">${nw?'チームを作成して参加':'参加する'}</button>
 ${cloud?`<button class="g" style="margin-top:8px;width:100%" data-a="lmode" data-id="${nw?'join':'new'}">${nw?'← 既存のチームに参加する':'チームを新規追加する'}</button>`:''}</div>`}
 
+let DR=null;
+function reorderSlot(from,to){const g=S.games.find(x=>x.id===S.gid);if(!g||!isAdmin()||from===to)return;const L2=cp(slotsOf(g)),x=L2.splice(from,1)[0];L2.splice(to,0,x);saveSlots(g,L2)}
 let lastMf='';
 function setAppName(n){try{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.setAttribute('content',n)}catch(e){}
  try{const l=document.querySelector('link[rel="manifest"]');if(!l||typeof Blob==='undefined'||!window.URL||!URL.createObjectURL)return;const b=new URL('./',location.href).href;
@@ -252,11 +262,12 @@ function diaSvg(i,sz){const H=[30,50],B1=[50,30],B2=[30,10],B3=[10,30],pt=a=>a.j
  if(i.tag.length)v+=`<text x="58" y="9" font-size="8" text-anchor="end" fill="#555">${esc(i.tag.join(' '))}</text>`;
  return v+'</svg>'}
 function bookDetail(g,L,P,R,mx,slOf){const info={},outs={},us=nrm(g.sc&&g.sc.us),rn=(pid,k)=>R.filter(r=>r.pid===pid&&r.k===k).length;
- for(let n=1;n<=mx;n++){const ls=[...P.filter(p=>+p.inn===n&&isOut(p.r)).flatMap(p=>Array.from({length:outN(p.r)},()=>({id:p.id,t:p.t}))),...R.filter(r=>+r.inn===n&&(r.k==='盗塁死'||r.k==='走塁死')).map(r=>({id:r.id,t:r.t}))].sort((a,b)=>a.t-b.t);ls.forEach((x,i)=>{(outs[x.id]=outs[x.id]||[]).push(i+1)})}
+ for(let n=1;n<=mx;n++){const ls=[...P.filter(p=>+p.inn===n&&isOut(p.r)).flatMap(p=>Array.from({length:outN(p.r)},()=>({id:p.id,t:p.t}))),...R.filter(r=>+r.inn===n&&(r.k==='盗塁死'||r.k==='走塁死'||r.k==='封殺')).map(r=>({id:r.id,t:r.t}))].sort((a,b)=>a.t-b.t);ls.forEach((x,i)=>{(outs[x.id]=outs[x.id]||[]).push(i+1)})}
  P.forEach(p=>{info[p.id]={txt:notn(p),b:BASE[p.r]||0,scored:false,out:(outs[p.id]||[]).join('・'),rbi:+p.rbi||0,tag:[],dir:(isHit(p.r)||p.r==='失')?(DN[p.d]||''):''}});
  [...R].sort((a,b)=>a.t-b.t).forEach(r=>{const c=P.filter(p=>p.pid===r.pid&&+p.inn===+r.inn&&p.t<r.t).sort((a,b)=>b.t-a.t)[0];if(!c)return;const i=info[c.id];
   if(r.k==='得点'){i.scored=true;i.b=4}
   else if(r.k==='盗塁'||r.k==='暴投'||r.k==='捕逸'){if(!i.scored)i.b=Math.min(3,i.b+1);i.tag.push(r.k==='盗塁'?'SB':r.k==='暴投'?'WP':'PB')}
+  else if(r.k==='封殺'){i.out=(outs[r.id]||[]).join('・');i.tag.push('FO')}
   else if(r.k==='併殺走者'){i.tag.push('DP')}
   else{i.out=(outs[r.id]||[]).join('・');i.tag.push(r.k==='盗塁死'?'CS':'走死')}});
  const cell=(pid,sid,n)=>{const a=P.filter(p=>p.pid===pid&&slOf(p)===sid&&+p.inn===n).sort((x,y)=>x.t-y.t);return a.map(p=>diaSvg(info[p.id],a.length>1?44:62)).join('')};
@@ -266,10 +277,10 @@ function bookDetail(g,L,P,R,mx,slOf){const info={},outs={},us=nrm(g.sc&&g.sc.us)
   for(let n=1;n<=mx;n++)h+=`<td class="bc">${cell(pid,s.id,n)}</td>`;
   h+=`<td>${o.ab}</td><td>${o.h}</td><td>${o.rbi}</td><td>${rn(pid,'得点')}</td><td>${rn(pid,'盗塁')}</td></tr>`})});
  h+=`<tr class="t"><td class="l">回計</td>`;
- for(let n=1;n<=mx;n++){const pi=P.filter(p=>+p.inn===n),hits=pi.filter(p=>isHit(p.r)).length,reach=pi.filter(p=>REACH.includes(p.r)).length,sc=R.filter(r=>+r.inn===n&&r.k==='得点').length,ro=R.filter(r=>+r.inn===n&&(r.k==='盗塁死'||r.k==='走塁死'||r.k==='併殺走者')).length,lob=Math.max(0,reach-sc-ro);
+ for(let n=1;n<=mx;n++){const pi=P.filter(p=>+p.inn===n),hits=pi.filter(p=>isHit(p.r)).length,reach=pi.filter(p=>REACH.includes(p.r)).length,sc=R.filter(r=>+r.inn===n&&r.k==='得点').length,ro=R.filter(r=>+r.inn===n&&(r.k==='盗塁死'||r.k==='走塁死'||r.k==='併殺走者'||r.k==='封殺')).length,lob=Math.max(0,reach-sc-ro);
   h+=`<td style="font-size:11px;line-height:1.4">${us[n-1]!=null?us[n-1]+'点':'-'}<br>${hits}安 残${lob}</td>`}
  const t=st(P);h+=`<td>${t.ab}</td><td>${t.h}</td><td>${t.rbi}</td><td>${R.filter(r=>r.k==='得点').length}</td><td>${R.filter(r=>r.k==='盗塁').length}</td></tr></table></div>
-<p class="note">緑の線は、打者や走者が自分の打席・盗塁・暴投/捕逸で進んだ塁までの道すじです。緑の塗りつぶしは得点(ホームイン)を表します。他の打者の安打などで進んだ分は、線には描かれません。赤い丸の数字は、その回のアウトの順番です。●は打点、SB=盗塁、WP=暴投、PB=捕逸、CS=盗塁死、走死=走塁死、GDP・DP=併殺です。ゴロのアウトは、一塁への送球(例: 6-3)として表示しています。残=残塁(推定)です。</p>`;
+<p class="note">緑の線は、打者や走者が自分の打席・盗塁・暴投/捕逸で進んだ塁までの道すじです。緑の塗りつぶしは得点(ホームイン)を表します。他の打者の安打などで進んだ分は、線には描かれません。赤い丸の数字は、その回のアウトの順番です。●は打点、SB=盗塁、WP=暴投、PB=捕逸、CS=盗塁死、走死=走塁死、FO=封殺、GDP・DP=併殺です。ゴロのアウトは、一塁への送球(例: 6-3)として表示しています。残=残塁(推定)です。</p>`;
  return h}
 function guideBox(){return`<details class="card" id="gd"${S.guideOpen?' open':''}><summary>📲 ホーム画面への追加方法(アプリのように使えます)</summary><div class="note" style="margin-top:8px;line-height:1.7">
 <b>iPhone(Safari)</b><ol style="margin:4px 0 8px;padding-left:20px"><li>Safariでこのページを開きます。</li><li>画面下の共有ボタン(四角から上向きの矢印のマーク)を押します。</li><li>「ホーム画面に追加」を選び、「追加」を押します。</li></ol>
@@ -293,7 +304,7 @@ function playersV(){const adm=isAdmin(),lv=p=>p.level==='admin'?'管理者':'一
 <div class="row" style="margin-top:8px"><select id="plvl">${opt([['user','操作レベル: 一般(閲覧・出欠のみ)'],['admin','操作レベル: 管理者(全機能)']],'user')}</select><button class="b" data-a="addp" style="flex:0 0 auto">追加</button></div>${cloud&&!rolesOn()?'<p class="note" style="margin:6px 0 0">※「操作レベル」は、管理者機能を有効にしたあとから使われます(設定の上のほうの案内を見てください)。</p>':''}</div>
 <h2>登録済みの選手</h2>`+list}
 
-const logTxt=l=>`${l.inn}回 ${l.n}番 ${l.k} ${pn(l.from)}→${pn(l.to)}${l.pos?'('+l.pos+')':''}`;
+const logTxt=l=>l.k==='守備入替'?`${l.inn}回 守備入替 ${pn(l.from)}(${l.pos||'-'}) ⇄ ${pn(l.other)}(${l.opos||'-'})`:`${l.inn}回 ${l.n}番 ${l.k} ${pn(l.from)}→${pn(l.to)}${l.pos?'('+l.pos+')':''}`;
 
 function gameV(){
  const g=S.games.find(x=>x.id===S.gid);if(!g){S.gid=null;return gamesV()}
@@ -309,7 +320,7 @@ function gameV(){
   h+=`<div class="sw card"><table class="sc"><tr><th></th>${I9.map(i=>`<th>${i}</th>`).join('')}<th>計</th></tr>
 <tr><th>${esc(short(tname())||'自')}</th>${us.map((v,i)=>`<td class="${au[i]?'a':''}"><input type="number" min="0" inputmode="numeric" data-sc="us" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(us)}</b></td></tr>
 <tr><th>${esc(short(g.opp)||'相手')}</th>${th.map((v,i)=>`<td><input type="number" min="0" inputmode="numeric" data-sc="them" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(th)}</b></td></tr></table>
-<div class="note" style="margin-top:6px">先に得点を入力してください(0点も入力)。入力した回までの打席を記録でき、打点はその回の得点を超えられません。得点が未入力の回に打点を記録すると、自動で加算されます(黄色)。</div></div>`;
+<div class="note" style="margin-top:6px">得点が1点以上入っている回は、その得点を超える打点・得点者は記録できません。未入力または0点の回は、打点や得点者を記録すると、自動でスコアに加算されます(黄色)。</div></div>`;
 
   /* 打順 */
   const inUse=new Set();L.forEach(s=>{inUse.add(s.pid);if(s.fp)inUse.add(s.fp)});
@@ -318,12 +329,13 @@ function gameV(){
   const cnt={};L.forEach(s=>{if(FPOS.includes(s.pos)||s.pos==='DP'||s.pos==='DH')cnt[s.pos]=(cnt[s.pos]||0)+1;if(s.fp&&s.fpPos)cnt[s.fpPos]=(cnt[s.fpPos]||0)+1});
   const dup=Object.keys(cnt).filter(k=>cnt[k]>1);
   h+=`<h2>打順</h2><div class="card">`+(L.length?L.map((s,i)=>{
-   let r=`<div class="pa"><span>${i+1}番 ${esc(pn(s.pid))}${(s.log||[]).length?' <small class="mute">(交代あり)</small>':''}</span><span><select data-pos="${i}" style="width:auto;padding:6px">${opt(POS,s.pos||'')}</select> ${i?`<button class="g" data-a="up" data-id="${i}">↑</button>`:''}<button class="x" data-a="rml" data-id="${i}">✕</button></span></div>`;
+   let r=`<div class="lr" data-i="${i}"><div class="pa"><span><span class="grip">≡</span> ${i+1}番 ${esc(pn(s.pid))}${(s.log||[]).length?' <small class="mute">(交代あり)</small>':''}</span><span><select data-pos="${i}" style="width:auto;padding:6px">${opt(POS,s.pos||'')}</select> ${i?`<button class="g" data-a="up" data-id="${i}">↑</button>`:''}<button class="x" data-a="rml" data-id="${i}">✕</button></span></div>`;
    if(s.pos==='DP'){
     if(s.fp)r+=`<div class="pa sb"><span>FP: ${esc(pn(s.fp))}(${esc(s.fpPos||'守備位置なし')}) <small class="mute">守備専門</small></span><span><button class="g" data-a="relfp" data-id="${i}">FP解除</button><button class="x" data-a="clrfp" data-id="${i}">✕</button></span></div>`;
     else r+=`<div class="pa sb"><span>FP(守備専門)</span><span><select data-fps="${i}" style="width:auto;padding:6px">${opt([['','選手'],...free.map(p=>[p.id,p.name])])}</select> <select data-fpp="${i}" style="width:auto;padding:6px">${opt([['','守備'],...FPOS])}</select> <button class="g" data-a="setfp" data-id="${i}">設定</button></span></div>`}
-   return r}).join(''):'<div class="mute">打順が空です。選手を追加してください。</div>');
+   return r+'</div>'}).join(''):'<div class="mute">打順が空です。選手を追加してください。</div>');
   if(dup.length)h+=`<p class="note" style="color:#a33;margin:6px 0 0">守備位置が重複しています: ${esc(dup.join('・'))}</p>`;
+  if(L.length>1)h+=`<p class="note" style="margin:6px 0 0">打順の並べ替え: PCは「≡」をドラッグ、スマホは名前の部分を長押ししてから、上下にドラッグします(↑ボタンでも動かせます)。</p>`;
   h+=av.length?`<div class="row" style="margin-top:8px"><select id="ladd">${opt(av.map(p=>[p.id,(p.no?p.no+' ':'')+p.name]))}</select><button class="b" data-a="addl" style="flex:0 0 auto">打順に追加</button></div>`:(S.players.length?'':'<p class="note">先に右上の⚙(設定)で、選手マスタに選手を登録してください。</p>');
   h+=`</div>`;
 
@@ -333,20 +345,21 @@ function gameV(){
 <div class="row" style="margin-top:8px"><select id="sp">${opt(free.map(p=>[p.id,(p.no?p.no+' ':'')+p.name]))}</select><select id="si">${opt([1,2,3,4,5,6,7,8,9].map(i=>[i,i+'回']),S.inn)}</select><select id="sq" disabled>${opt([['','守備'],...DIRS,'DP','DH','控'])}</select></div>
 <button class="b" style="margin-top:8px;width:100%" data-a="dosub">交代を記録</button>
 <p class="note" style="margin:6px 0 0">代打は打順だけを入れ替えます(守備位置は「代打」表示。守備に就く場合は上の守備位置を変更)。守備交代は選手と守備位置を入れ替えます。一度退いた選手も、再度選べます(リエントリー)。</p></div>`}
+  if(L.length>1){const so=L.map((s,i)=>[i,(i+1)+'番 '+pn(s.pid)+'('+(s.pos||'-')+')']);
+   h+=`<h2>守備位置の入れ替え</h2><div class="card"><div class="row"><select id="sw1">${opt(so,0)}</select><select id="sw2">${opt(so,1)}</select></div><div class="row" style="margin-top:8px"><select id="swi">${opt(innOpts(g,()=>0),S.inn)}</select><button class="b" data-a="doswap" style="flex:0 0 auto">入れ替える</button></div><p class="note" style="margin:6px 0 0">出場している選手どうしの守備位置を入れ替えます(例: 投手と一塁手の入れ替え)。ベンチの選手との交代は、上の「選手交代」を使います。</p></div>`}
   if(logs.length)h+=`<div class="card note">${logs.map(l=>esc(logTxt(l))).join('<br>')}</div>`;
 
   /* 打席入力 */
   const mi=maxInn(g);
   if(L.length){
    const E=P.find(p=>p.id===S.edit)||null;
-   if(!mi&&!E)h+=`<h2>打席を入力</h2><div class="card mute">先に上のスコア表へ得点(0点も可)を入力してください。入力した回までの打席を記録できます。</div>`;
-   else{
+   {
     const bo=L.map((s,i)=>[s.id+':'+s.pid,(i+1)+'番 '+pn(s.pid)]);
     const lp=P[P.length-1],li=lp?L.findIndex(s=>s.id===slOf(lp)):-1,nb=L[(li+1)%L.length];
     let sel=nb.id+':'+nb.pid;
     if(!E&&S.pre&&bo.some(x=>x[0]===S.pre))sel=S.pre;
     if(E){sel=slOf(E)+':'+E.pid;if(!bo.some(x=>x[0]===sel))bo.push([sel,pn(E.pid)+'(交代済)'])}
-    const top=Math.max(mi,E?+E.inn:0),inns=Array.from({length:top},(_,i)=>[i+1,(i+1)+'回'+(outsIn(g,i+1)>=3?'(3アウト)':'')]);
+    const top=9,inns=innOpts(g,n=>outsIn(g,n));
     h+=`<h2>${E?'打席を修正':'打席を入力'}</h2><div class="card"><div class="row"><select id="b">${opt(bo,sel)}</select><select id="inn">${opt(inns,E?E.inn:Math.min(S.inn,top))}</select></div>
 <div class="row" style="margin-top:8px"><select id="d"><option value="">打球の方向</option>${opt(DIRS,E&&E.d)}</select><select id="k">${opt(KINDS,E&&E.k)}</select></div>
 <div class="row" style="margin-top:8px"><select id="r">${opt(RES,E?E.r:'out')}</select><select id="rbi">${opt([0,1,2,3,4].map(i=>[i,'打点'+i]),E?E.rbi:0)}</select></div>
@@ -354,9 +367,10 @@ function gameV(){
 <div class="note" id="rn" style="margin-top:6px"></div>
 <button class="b" style="margin-top:8px;width:100%" data-a="addpa">${E?'修正を保存':'この打席を記録'}</button>${E?'<button class="g" style="margin-top:8px;width:100%" data-a="canpa">キャンセル</button>':''}</div>`}
   }
-  if(L.length&&mi){const ri=Array.from({length:mi},(_,i)=>[i+1,(i+1)+'回'+(outsIn(g,i+1)>=3?'(3アウト)':'')]);
-   h+=`<h2>走塁・得点</h2><div class="card"><div class="row"><select id="rk">${opt(RK)}</select><select id="rp"></select><select id="ri">${opt(ri,Math.min(S.inn,mi))}</select></div><button class="b" style="margin-top:8px;width:100%" data-a="addrun">記録</button><p class="note" style="margin:6px 0 0">走者は、その回に出塁していて、まだ得点・アウトになっていない選手だけ選べます。打点がつく得点は、打席入力の「得点者」で記録できます。ここでは打点にならない得点(エラー・暴投など)も記録します。盗塁死・走塁死はアウトに数えます。暴投・捕逸は進塁の記録のみです。</p></div>`}
-  if(R.length)h+=`<h2>入力済みの走塁・得点(${R.length})</h2><div class="card">`+[...R].reverse().slice(0,60).map(r=>`<div class="pa"><span>${r.inn}回 ${esc(pn(r.pid))}:${RLAB[r.k]}</span><button class="x" data-a="delrun" data-id="${r.id}">✕</button></div>`).join('')+`</div>`;
+  if(L.length){const ri=innOpts(g,n=>outsIn(g,n));
+   h+=`<h2>走塁・得点</h2><div class="card"><div class="row"><select id="rk">${opt(RK)}</select><select id="rp"></select><select id="ri">${opt(ri,S.inn)}</select></div><button class="b" style="margin-top:8px;width:100%" data-a="addrun">記録</button><p class="note" style="margin:6px 0 0">走者は、その回に出塁していて、まだ得点・アウトになっていない選手だけ選べます。打点がつく得点は、打席入力の「得点者」で記録できます。ここでは打点にならない得点(エラー・暴投など)も記録します。盗塁死・走塁死はアウトに数えます。暴投・捕逸は進塁の記録のみです。</p></div>`}
+  const runCard=(t,a)=>a.length?`<h2>${t}(${a.length})</h2><div class="card">`+[...a].reverse().slice(0,60).map(r=>`<div class="pa"><span>${r.inn}回 ${esc(pn(r.pid))}:${runLab(r)}</span><button class="x" data-a="delrun" data-id="${r.id}">✕</button></div>`).join('')+`</div>`:'';
+  h+=runCard('入力済みの得点',R.filter(r=>r.k==='得点'))+runCard('入力済みの走塁',R.filter(r=>r.k!=='得点'));
   h+=`<h2>入力済み(${P.length}打席)</h2><div class="card">`+(P.length?[...P].reverse().slice(0,60).map(p=>`<div class="pa"><span>${p.inn}回 ${esc(pn(p.pid))}:${esc(lab(p))}${+p.rbi?' ('+p.rbi+'打点)':''}</span><span><button class="g" data-a="editpa" data-id="${p.id}">✎</button><button class="x" data-a="delpa" data-id="${p.id}">✕</button></span></div>`).join(''):'<div class="mute">まだ入力がありません。</div>')+`</div>
 <button class="g" style="width:100%;margin-top:8px;color:#a33" data-a="delg">この試合を削除</button>`;
  }
@@ -366,7 +380,7 @@ function gameV(){
   L.forEach((s,i)=>{slotPids(s).forEach((pid,j)=>{const ps=P.filter(p=>p.pid===pid&&slOf(p)===s.id),o=st(ps);
    h+=`<tr><td>${j?'↳':i+1}</td><td>${pid===s.pid?esc(s.pos==='代'?'代打':s.pos||''):''}</td><td class="l">${esc(pn(pid))}</td><td>${o.ab}</td><td>${o.h}</td><td>${o.rbi}</td><td>${rn(pid,'得点')}</td><td>${rn(pid,'盗塁')}</td><td class="l">${ps.map(p=>`<span class="chip${isHit(p.r)?' h':''}${S.pedit?' ed':''}"${S.pedit?` data-a="editpa" data-id="${p.id}"`:''}>${esc(lab(p))}</span>`).join('')}${S.pedit&&pid===s.pid?`<span class="chip add" data-a="addfor" data-id="${s.id}:${pid}">＋</span>`:''}</td></tr>`})});
   const t=st(P);h+=`<tr class="t"><td></td><td></td><td class="l">計</td><td>${t.ab}</td><td>${t.h}</td><td>${t.rbi}</td><td>${rn0('得点')}</td><td>${rn0('盗塁')}</td><td></td></tr></table></div>`;
-  if(S.pedit)h+=`<h2>走塁・得点の記録</h2><div class="card">`+(R.length?R.map(r=>`<div class="pa"><span>${r.inn}回 ${esc(pn(r.pid))}:${RLAB[r.k]}</span><button class="x" data-a="delrun" data-id="${r.id}">✕</button></div>`).join(''):'<div class="mute">記録がありません。</div>')+`<p class="note" style="margin:6px 0 0">追加は「入力」タブの「走塁・得点」から行います。</p></div>`;
+  if(S.pedit)h+=`<h2>走塁・得点の記録</h2><div class="card">`+(R.length?R.map(r=>`<div class="pa"><span>${r.inn}回 ${esc(pn(r.pid))}:${runLab(r)}</span><button class="x" data-a="delrun" data-id="${r.id}">✕</button></div>`).join(''):'<div class="mute">記録がありません。</div>')+`<p class="note" style="margin:6px 0 0">追加は「入力」タブの「走塁・得点」から行います。</p></div>`;
   const ev=S.pedit?[]:R.filter(r=>r.k!=='得点');if(ev.length)h+=`<div class="card note">${ev.map(r=>esc(r.inn+'回 '+pn(r.pid)+' '+RLAB[r.k])).join('<br>')}</div>`;
   const fps=L.filter(s=>s.fp);if(fps.length)h+=`<p class="note">FP(守備専門): ${fps.map(s=>esc(pn(s.fp))+'('+esc(s.fpPos||'-')+')').join('、')}</p>`;
   if(logs.length)h+=`<div class="card note">${logs.map(l=>esc(logTxt(l))).join('<br>')}</div>`;
@@ -379,8 +393,7 @@ function gameV(){
   const dflt=T.length?T[T.length-1].pid:(pls[0]||{}).id;
   if(!adm){}
   else if(!S.players.length)h+='<div class="empty">先に設定で選手を登録してください。</div>';
-  else if(!pm&&!E)h+='<div class="card mute">先に「入力」タブのスコア表へ得点を入力してください。入力した回までの投手成績を記録できます。</div>';
-  else{const top=Math.max(pm,E?+E.inn:0),inns=Array.from({length:top},(_,i)=>[i+1,(i+1)+'回'+(pOuts(g,i+1)>=3?'(3アウト)':'')]);
+  else{const top=9,inns=innOpts(g,n=>pOuts(g,n));
    const v=k=>E?(+E[k]||0):0,f=(id,l,k)=>`<label class="nf">${l}<input type="number" min="0" inputmode="numeric" id="${id}" value="${v(k)}"></label>`;
    h+=`<h2 style="margin-top:0">${E?'投手成績を修正':'投手成績を入力'}</h2><div class="card"><div class="row"><select id="tp">${opt(pls.map(p=>[p.id,(p.no?p.no+' ':'')+p.name]),E?E.pid:dflt)}</select><select id="ti">${opt(inns,E?E.inn:Math.min(S.inn,top))}</select></div>
 <div class="row" style="margin-top:8px">${f('to','アウト','o')}${f('th','被安打','h')}${f('thr','被本塁打','hr')}${f('tb','与四球','bb')}</div>
@@ -426,7 +439,10 @@ function statsBat(){
  `<p class="note">打率=安打÷打数、出塁=(安打+四球+死球)÷(打数+四球+死球+犠飛)、長打=塁打÷打数。犠打・四球・死球は打数に含みません。盗死=盗塁死、走死=走塁死。</p>`}
 
 function statsV(){return statsBat()+pitV()}
+function drCancel(){if(DR){clearTimeout(DR.timer);if(DR.row){DR.row.classList.remove('drag');DR.row.style.transform=''}document.querySelectorAll('.lr.over').forEach(r=>r.classList.remove('over'))}DR=null}
+function drBegin(){if(!DR||DR.active)return;DR.active=true;DR.row.classList.add('drag');try{DR.row.setPointerCapture(DR.pid)}catch(x){}try{if(navigator.vibrate)navigator.vibrate(15)}catch(x){}}
 function draw(){
+ if(DR&&DR.active)return;
  $('#ttl').textContent=S.team?(tname()||S.team):'やきう・ソフトボール成績表';document.title=$('#ttl').textContent;
  if(S.team&&S.appName!==$('#ttl').textContent){S.appName=$('#ttl').textContent;setAppName(S.appName)}$('#nv').hidden=!S.team;
  if(!S.ready){$('#m').innerHTML='<div class="empty">読み込み中…</div>';return}
@@ -437,8 +453,8 @@ function draw(){
  tg()}
 function updRbi(){const g=S.games.find(x=>x.id===S.gid),sl=$('#rbi'),ii=$('#inn');if(!g||!sl||!ii)return;
  const inn=+ii.value,us=nrm(g.sc&&g.sc.us),au=au9(g),i=inn-1;let mx=4,note;
- if(ent(us[i])&&!au[i]){const rem=us[i]-rbiIn(g,inn,S.edit);mx=Math.max(0,Math.min(4,rem));note=inn+'回の得点 '+us[i]+' 点 / 残り打点 '+Math.max(0,rem)}
- else note=inn+'回の得点は未入力です。打点を記録すると自動でスコアに加算されます';
+ if(capU(g,i)!=null){const rem=capU(g,i)-rbiIn(g,inn,S.edit);mx=Math.max(0,Math.min(4,rem));note=inn+'回の得点 '+capU(g,i)+' 点 / 残り打点 '+Math.max(0,rem)}
+ else note=inn+'回の得点は未入力か0点です。打点・得点者を記録すると、自動でスコアに加算されます';
  note+=' / アウト '+outsIn(g,inn,S.edit)+'/3';
  const cur=Math.min(+sl.value||0,mx);sl.innerHTML=opt(Array.from({length:mx+1},(_,k)=>[k,'打点'+k]),cur);$('#rn').textContent=note}
 function updSc(){const g=S.games.find(x=>x.id===S.gid),box=$('#sg'),rb=$('#rbi');if(!g||!box||!rb)return;
@@ -447,7 +463,7 @@ function updSc(){const g=S.games.find(x=>x.id===S.gid),box=$('#sg'),rb=$('#rbi')
  const ids=Object.keys(c).filter(k=>c[k]>0),sel=S.scSel||[];
  if(r==='本'&&n>0&&!ids.includes(sel[0]))sel[0]=bt;
  S.scSel=sel;
- let dp='';if(r==='併殺'){const ds=S.dpSel||'';dp=`<div class="note" style="flex:0 0 100%">アウトになった走者(併殺のもう1人。出塁中の走者から選択)</div><select data-dps>${opt([['','(記録しない)'],...ids.map(id=>[id,pn(id)])],ids.includes(ds)?ds:'')}</select>`}
+ let dp='';if(r==='併殺'||r==='野選'){const ds=S.dpSel||'';dp=`<div class="note" style="flex:0 0 100%">${r==='併殺'?'アウトになった走者(併殺のもう1人。出塁中の走者から選択)':'アウトになった走者(封殺・タッチアウトのとき。なければ空欄)'}</div><select data-dps>${opt([['','(記録しない)'],...ids.map(id=>[id,pn(id)])],ids.includes(ds)?ds:'')}</select>${r==='野選'?`<select data-fob>${opt([['','塁(不明)'],['2','2塁'],['3','3塁'],['H','本塁']],S.foBase||'')}</select>`:''}`}
  box.innerHTML=(n?`<div class="note" style="flex:0 0 100%">得点者(打点の数だけ。出塁中の走者から選択)</div>`+Array.from({length:n},(_,i)=>`<select data-scs="${i}">${opt([['','得点者'+(i+1)],...ids.map(id=>[id,pn(id)+(rch&&id===bt?'(打者)':'')])],ids.includes(sel[i])?sel[i]:'')}</select>`)  .join(''):'')+dp}
 function updRun(){const g=S.games.find(x=>x.id===S.gid),sl=$('#rp'),ii=$('#ri');if(!g||!sl||!ii)return;
  const c=onBase(g,+ii.value),ids=Object.keys(c).filter(k=>c[k]>0),cur=sl.value;
@@ -513,6 +529,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   if(s.fp&&k==='守備'&&q!=='DP')return alert('このDPにはFPが設定されています。先にFPを解除してください');
   s.log.push({k:k==='代打'?'代打':'守備交代',inn,from:s.pid,to:np,pos:k==='代打'?'':q});
   s.pid=np;s.pos=k==='代打'?((s.pos==='DP'||s.pos==='DH')?s.pos:'代'):q;S.inn=inn;saveSlots(g,L2)}
+ else if(a==='doswap'){const i1=+$('#sw1').value,i2=+$('#sw2').value,inn=+$('#swi').value;if(i1===i2)return alert('別の選手を選んでください');
+  const L2=cp(slotsOf(g)),A=L2[i1],B=L2[i2];if(!A||!B)return;
+  if(A.fp||B.fp)return alert('FPが設定されているDPは入れ替えできません。先にFPを解除してください');
+  const pa=A.pos,pb=B.pos;A.pos=pb;B.pos=pa;A.log.push({k:'守備入替',inn,from:A.pid,to:A.pid,pos:pb,other:B.pid,opos:pa});S.inn=inn;saveSlots(g,L2)}
  else if(a==='setfp'){const pv=document.querySelector(`[data-fps="${id}"]`).value,pp=document.querySelector(`[data-fpp="${id}"]`).value;if(!pv||!pp)return alert('FPの選手と守備位置を選んでください');const L2=cp(slotsOf(g));L2[+id].fp=pv;L2[+id].fpPos=pp;saveSlots(g,L2)}
  else if(a==='clrfp'){const L2=cp(slotsOf(g));L2[+id].fp='';L2[+id].fpPos='';saveSlots(g,L2)}
  else if(a==='relfp'){const inn=+prompt('FPを解除して、DPの打順に入れます。何回からですか?(1-9)',S.inn);if(!inn||inn<1||inn>9)return;const L2=cp(slotsOf(g)),s=L2[+id];
@@ -520,26 +540,25 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  else if(a==='addpa'){const r=$('#r').value,no=NOBALL.includes(r),d=$('#d').value;
   if(!no&&!d)return alert('打球の方向を選んでください');
   const[slid,pid]=$('#b').value.split(':'),inn=+$('#inn').value,rbi=+$('#rbi').value,o0=S.pas.find(p=>p.id===S.edit);
-  if(inn>maxInn(g)&&!(o0&&+o0.inn===inn))return alert('スコアを入力した回までしか打席を記録できません。先にスコアを入力してください');
-  const oc=outsIn(g,inn,o0&&o0.id);
-  if(o0){if(oc+outN(r)>3)return alert(inn+'回のアウトが3つを超えます。結果をアウト以外に変えるか、他の記録を直してください')}
+  const oc=outsIn(g,inn,o0&&o0.id),dpr0=(r==='併殺'||r==='野選')?((document.querySelector('[data-dps]')||{}).value||''):'',fo=(r==='野選'&&dpr0)?1:0;
+  if(o0){if(oc+outN(r)+fo>3)return alert(inn+'回のアウトが3つを超えます。結果をアウト以外に変えるか、他の記録を直してください')}
   else if(oc>=3)return alert(inn+'回はすでに3アウトです。この回にはこれ以上打席を記録できません');
-  else if(oc+outN(r)>3)return alert(inn+'回はあと'+(3-oc)+'アウトまでです。併殺打(2アウト)は記録できません');
+  else if(oc+outN(r)+fo>3)return alert(inn+'回はあと'+(3-oc)+'アウトまでです。この結果(アウト'+(outN(r)+fo)+'つ分)は記録できません');
   const us=nrm(g.sc&&g.sc.us),au=au9(g),i=inn-1;
-  if(ent(us[i])&&!au[i]&&rbiIn(g,inn,o0&&o0.id)+rbi>us[i])return alert(inn+'回の得点('+us[i]+'点)を超える打点は記録できません');
+  if(capU(g,i)!=null&&rbiIn(g,inn,o0&&o0.id)+rbi>capU(g,i))return alert(inn+'回の得点('+capU(g,i)+'点)を超える打点は記録できません');
   const sel=[...document.querySelectorAll('[data-scs]')].map(x=>x.value).filter(Boolean);
   if(r==='本'&&rbi<1)return alert('本塁打の打点は1以上にしてください');
   if(r==='本'&&!sel.includes(pid))return alert('本塁打は、打者自身を得点者に選んでください');
   const cb=onBase(g,inn,o0?{ex:o0.id,tb:o0.t}:{});if(REACH.includes(r))cb[pid]=(cb[pid]||0)+1;
   const used={};for(const x of sel){used[x]=(used[x]||0)+1;if(used[x]>(cb[x]||0))return alert(pn(x)+'は'+inn+'回に出塁していないか、すでに得点・アウトになっています')}
-  const dpr=r==='併殺'?((document.querySelector('[data-dps]')||{}).value||''):'';
+  const dpr=dpr0;
   if(dpr){used[dpr]=(used[dpr]||0)+1;if(used[dpr]>(cb[dpr]||0))return alert(pn(dpr)+'は'+inn+'回に出塁していないか、すでに得点・アウトになっています')}
   const oldR=o0?S.runs.filter(x=>x.pa===o0.id):[],others=S.runs.filter(x=>x.gid===g.id&&!oldR.some(y=>y.id===x.id));
-  if(ent(us[i])&&!au[i]&&others.filter(x=>x.k==='得点'&&+x.inn===inn).length+sel.length>us[i])return alert(inn+'回の得点('+us[i]+'点)を超える得点者は記録できません');
-  S.inn=(!o0&&oc+outN(r)>=3)?Math.min(inn+1,9):inn;const pa={id:o0?o0.id:uid(),gid:g.id,pid,sl:slid,inn,d:no?'':d,k:no?'':$('#k').value,r,rbi,t:o0?o0.t:Date.now()};
+  if(capU(g,i)!=null&&others.filter(x=>x.k==='得点'&&+x.inn===inn).length+sel.length>capU(g,i))return alert(inn+'回の得点('+capU(g,i)+'点)を超える得点者は記録できません');
+  S.inn=(!o0&&oc+outN(r)+fo>=3)?Math.min(inn+1,9):inn;const pa={id:o0?o0.id:uid(),gid:g.id,pid,sl:slid,inn,d:no?'':d,k:no?'':$('#k').value,r,rbi,t:o0?o0.t:Date.now()};
   const after=S.pas.filter(p=>p.gid===g.id&&p.id!==pa.id).concat([pa]);
-  const nr=sel.map((p,k)=>({id:uid(),gid:g.id,pid:p,sl:'',inn,k:'得点',pa:pa.id,t:pa.t+(k+1)/1000})).concat(dpr?[{id:uid(),gid:g.id,pid:dpr,sl:'',inn,k:'併殺走者',pa:pa.id,t:pa.t+0.0005}]:[]),gr=others.concat(nr);let g2=autoApply(g,inn,after,gr);if(o0&&+o0.inn!==inn)g2=autoApply(g2,o0.inn,after,gr);
-  oldR.forEach(x=>del('runs',x.id));nr.forEach(x=>put('runs',x));put('games',g2);put('pas',pa);S.edit=null;S.pre=null;S.scSel=[];S.dpSel='';draw()}
+  const nr=sel.map((p,k)=>({id:uid(),gid:g.id,pid:p,sl:'',inn,k:'得点',pa:pa.id,t:pa.t+(k+1)/1000})).concat(dpr?[{id:uid(),gid:g.id,pid:dpr,sl:'',inn,k:r==='併殺'?'併殺走者':'封殺',b:r==='野選'?((document.querySelector('[data-fob]')||{}).value||''):'',pa:pa.id,t:pa.t+0.0005}]:[]),gr=others.concat(nr);let g2=autoApply(g,inn,after,gr);if(o0&&+o0.inn!==inn)g2=autoApply(g2,o0.inn,after,gr);
+  oldR.forEach(x=>del('runs',x.id));nr.forEach(x=>put('runs',x));put('games',g2);put('pas',pa);S.edit=null;S.pre=null;S.scSel=[];S.dpSel='';S.foBase='';draw()}
  else if(a==='evnew'){S.evForm='new';draw()}
  else if(a==='evedit'){S.evForm=id;draw()}
  else if(a==='evcopy'){const e=S.events.find(x=>x.id===id);if(!e)return;
@@ -567,24 +586,22 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  else if(a==='delpit'){const x=S.pitch.find(p=>p.id===id);if(x&&g)put('games',autoThem(g,x.inn,S.pitch.filter(p=>p.gid===g.id&&p.id!==id)));if(S.pe===id)S.pe=null;del('pitch',id)}
  else if(a==='addpit'){const n=k=>Math.max(0,Math.floor(+$('#'+k).value||0)),pid=$('#tp').value,inn=+$('#ti').value,o=n('to'),hh=n('th'),hr=n('thr'),bb=n('tb'),hbp=n('thp'),so=n('tk'),r=n('tr'),er=n('te'),e0=S.pitch.find(p=>p.id===S.pe);
   if(!pid||!inn)return alert('投手と回を選んでください');
-  if(inn>Math.max(maxInn(g),maxThem(g))&&!(e0&&+e0.inn===inn))return alert('スコアを入力した回までしか記録できません');
   if(o>3)return alert('アウトは3までです');
   if(hr>hh)return alert('被本塁打が被安打を超えています');
   if(er>r)return alert('自責点が失点を超えています');
   if(pOuts(g,inn,e0&&e0.id)+o>3)return alert(inn+'回のアウトの合計が3を超えます(他の投手の分を含む)');
   const th=nrm(g.sc&&g.sc.them),at=at9(g),i=inn-1;
-  if(ent(th[i])&&!at[i]&&pRuns(g,inn,e0&&e0.id)+r>th[i])return alert(inn+'回の相手の得点('+th[i]+'点)を超える失点は記録できません');
+  if(capT(g,i)!=null&&pRuns(g,inn,e0&&e0.id)+r>capT(g,i))return alert(inn+'回の相手の得点('+capT(g,i)+'点)を超える失点は記録できません');
   const x={id:e0?e0.id:uid(),gid:g.id,pid,inn,o,h:hh,hr,bb,hbp,so,r,er,t:e0?e0.t:Date.now()};
   const list=S.pitch.filter(p=>p.gid===g.id&&p.id!==x.id).concat([x]);
   let g2=autoThem(g,inn,list);if(e0&&+e0.inn!==inn)g2=autoThem(g2,e0.inn,list);
   put('games',g2);put('pitch',x);S.pe=null;S.inn=inn;draw()}
  else if(a==='addrun'){const k=$('#rk').value,pid=$('#rp').value,inn=+$('#ri').value;if(!pid||!inn)return;
-  if(inn>maxInn(g))return alert('スコアを入力した回までしか記録できません');
   if((onBase(g,inn)[pid]||0)<=0)return alert('その選手は'+inn+'回に出塁していないか、すでに得点・アウトになっています');
   const isO=k==='盗塁死'||k==='走塁死',oc=outsIn(g,inn);
   if(isO&&oc>=3)return alert(inn+'回はすでに3アウトです');
   const us=nrm(g.sc&&g.sc.us),au=au9(g),i=inn-1;
-  if(k==='得点'&&ent(us[i])&&!au[i]&&runsIn(g,inn)+1>us[i])return alert(inn+'回の得点('+us[i]+'点)を超える得点者は記録できません');
+  if(k==='得点'&&capU(g,i)!=null&&runsIn(g,inn)+1>capU(g,i))return alert(inn+'回の得点('+capU(g,i)+'点)を超える得点者は記録できません');
   const L=slotsOf(g),r={id:uid(),gid:g.id,pid,sl:(L.find(s=>slotPids(s).includes(pid))||{}).id||'',inn,k,t:Date.now()};
   if(k==='得点')put('games',autoApply(g,inn,S.pas.filter(p=>p.gid===g.id),S.runs.filter(x=>x.gid===g.id).concat([r])));
   put('runs',r);S.inn=(isO&&oc+1>=3)?Math.min(inn+1,9):inn;draw()}
@@ -593,8 +610,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   del('runs',id)}
  else if(a==='delpa'){const p=S.pas.find(x=>x.id===id);if(S.edit===id)S.edit=null;
   if(p&&g){put('games',autoApply(g,p.inn,S.pas.filter(x=>x.gid===g.id&&x.id!==id),S.runs.filter(r=>r.gid===g.id&&r.pa!==id)))}S.runs.filter(r=>r.pa===id).forEach(r=>del('runs',r.id));S.scSel=[];del('pas',id)}
- else if(a==='editpa'){S.sub='in';S.edit=id;S.scSel=S.runs.filter(r=>r.pa===id&&r.k==='得点').sort((x,y)=>x.t-y.t).map(r=>r.pid);S.dpSel=(S.runs.find(r=>r.pa===id&&r.k==='併殺走者')||{}).pid||'';draw();$('#b').scrollIntoView({behavior:'smooth',block:'center'})}
- else if(a==='canpa'){S.edit=null;S.scSel=[];S.dpSel='';draw()}
+ else if(a==='editpa'){S.sub='in';S.edit=id;S.scSel=S.runs.filter(r=>r.pa===id&&r.k==='得点').sort((x,y)=>x.t-y.t).map(r=>r.pid);const dr=S.runs.find(r=>r.pa===id&&(r.k==='併殺走者'||r.k==='封殺'))||{};S.dpSel=dr.pid||'';S.foBase=dr.b||'';draw();$('#b').scrollIntoView({behavior:'smooth',block:'center'})}
+ else if(a==='canpa'){S.edit=null;S.scSel=[];S.dpSel='';S.foBase='';draw()}
  else if(a==='editp'){const p=S.players.find(x=>x.id===id),n=prompt('名前',p.name);if(n===null)return;const no=prompt('背番号',p.no||'');if(no===null)return;const ps=prompt('メインポジション(投捕一二三遊左中右 / DP / DH、空欄でなし)',p.pos||'');if(ps===null)return;const sb=prompt('サブポジション(例: 二・三)',p.sub||'');if(n.trim())put('players',{...p,name:n.trim(),no:no.trim(),pos:ps.trim(),sub:sb===null?(p.sub||''):sb.trim()})}
  else if(a==='editg'){const d=prompt('日付(YYYY-MM-DD)',g.date);if(d===null)return;const o=prompt('対戦相手',g.opp||'');if(o===null)return;const tn=prompt('大会名(空欄で大会なし)',g.tourn||'');if(tn===null)return;const ty=confirm('公式戦ですか?\nOK=公式戦 / キャンセル=練習試合')?'official':'practice';const dd=d.trim()||g.date;put('games',{...g,date:dd,opp:o.trim(),tourn:tn.trim(),type:ty,season:dd.slice(0,4)})}
  else if(a==='delg'){if(confirm('この試合と全ての打席記録を削除します。よろしいですか?')){S.pas.filter(p=>p.gid===g.id).forEach(p=>del('pas',p.id));S.runs.filter(r=>r.gid===g.id).forEach(r=>del('runs',r.id));S.pitch.filter(p=>p.gid===g.id).forEach(p=>del('pitch',p.id));del('games',g.id);S.gid=null;draw()}}
@@ -602,27 +619,50 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
 document.addEventListener('change',e=>{const t=e.target,g=S.games.find(x=>x.id===S.gid);
  if(!isAdmin()&&(t.dataset.sc!==undefined||t.dataset.pos!==undefined||t.dataset.dec!==undefined||t.dataset.plv!==undefined)){draw();return}
  if(t.dataset.sc&&g){const side=t.dataset.sc,i=+t.dataset.i,sc={us:nrm(g.sc&&g.sc.us),them:nrm(g.sc&&g.sc.them)},au=au9(g),v=t.value===''?null:Math.max(0,Math.floor(+t.value||0));
-  if(side==='us'&&v!=null){const u=Math.max(rbiIn(g,i+1),runsIn(g,i+1));if(v<u){alert((i+1)+'回に記録済みの打点・得点者('+u+')より小さい得点にはできません');draw();return}}
-  if(side==='them'&&v!=null){const u=pRuns(g,i+1);if(v<u){alert((i+1)+'回に記録済みの失点('+u+')より小さい得点にはできません');draw();return}}
+  if(side==='us'&&v!=null&&v>=1){const u=Math.max(rbiIn(g,i+1),runsIn(g,i+1));if(v<u){alert((i+1)+'回に記録済みの打点・得点者('+u+')より小さい得点にはできません');draw();return}}
+  if(side==='them'&&v!=null&&v>=1){const u=pRuns(g,i+1);if(v<u){alert((i+1)+'回に記録済みの失点('+u+')より小さい得点にはできません');draw();return}}
   const at=at9(g);if(side==='them')at[i]=false;
-  sc[side][i]=v;if(side==='us')au[i]=false;put('games',{...g,sc,auto:au,autoT:at})}
+  sc[side][i]=v;if(side==='us')au[i]=false;
+  let g2={...g,sc,auto:au,autoT:at};
+  if(side==='us'&&!(v>=1))g2=autoApply(g2,i+1,S.pas.filter(p=>p.gid===g.id),S.runs.filter(r=>r.gid===g.id));
+  if(side==='them'&&!(v>=1))g2=autoThem(g2,i+1,S.pitch.filter(p=>p.gid===g.id));
+  put('games',g2)}
  else if(t.dataset.dec&&g){const d={...(g.dec||{})};if(t.value)d[t.dataset.dec]=t.value;else delete d[t.dataset.dec];put('games',{...g,dec:d})}
  else if(t.dataset.pos!==undefined&&g){const L2=cp(slotsOf(g)),s=L2[+t.dataset.pos];
   if(s.fp&&t.value!=='DP'){alert('このDPにはFPが設定されています。先にFPを解除してください');draw();return}
+  const o=DIRS.includes(t.value)?L2.find(x=>x!==s&&x.pos===t.value):null;
+  if(o&&confirm(pn(o.pid)+'さんと、守備位置を入れ替えますか?\n(「キャンセル」を押すと、同じ位置が重複したままになります)')){const old=s.pos;o.pos=old;s.log.push({k:'守備入替',inn:S.inn,from:s.pid,to:s.pid,pos:t.value,other:o.pid,opos:old})}
   s.pos=t.value;saveSlots(g,L2)}
  else if(t.dataset.plv){const p=S.players.find(x=>x.id===t.dataset.plv);if(p)put('players',{...p,level:t.value})}
  else if(t.dataset.f){S.f[t.dataset.f]=t.value;draw()}
  else if(t.dataset.scs!==undefined){S.scSel[+t.dataset.scs]=t.value}
  else if(t.dataset.dps!==undefined){S.dpSel=t.value}
+ else if(t.dataset.fob!==undefined){S.foBase=t.value}
  else if(t.id==='r'||t.id==='sk')tg()
  else if(t.id==='inn'){updRbi();updSc()}
  else if(t.id==='rbi'||t.id==='b')updSc()
  else if(t.id==='ri')updRun()});
+document.addEventListener('pointerdown',e=>{const row=e.target.closest&&e.target.closest('.lr');if(!row||e.button>0||!isAdmin()||e.target.closest('select,button,input,option'))return;
+ drCancel();const isGrip=!!e.target.closest('.grip');
+ if(e.pointerType==='mouse'&&!isGrip)return;
+ DR={row,i:+row.dataset.i,x0:e.clientX,y0:e.clientY,pid:e.pointerId,type:e.pointerType,active:false,to:+row.dataset.i,timer:null};
+ if(e.pointerType!=='mouse'){if(isGrip)drBegin();else DR.timer=setTimeout(drBegin,350)}});
+document.addEventListener('pointermove',e=>{if(!DR||e.pointerId!==DR.pid)return;const dx=e.clientX-DR.x0,dy=e.clientY-DR.y0;
+ if(!DR.active){if(Math.abs(dx)+Math.abs(dy)>(DR.type==='mouse'?5:10)){if(DR.type==='mouse')drBegin();else{drCancel();return}}else return}
+ DR.row.style.transform='translateY('+dy+'px)';
+ const rows=[...document.querySelectorAll('.lr')];let to=DR.to;
+ rows.forEach((r,k)=>{r.classList.remove('over');if(r===DR.row)return;const b=r.getBoundingClientRect();if(e.clientY>=b.top&&e.clientY<=b.bottom)to=k});
+ DR.to=to;if(to!==DR.i&&rows[to])rows[to].classList.add('over')});
+function drEnd(e){if(!DR||e.pointerId!==DR.pid)return;const d=DR;drCancel();if(d.active&&d.to!==d.i)reorderSlot(d.i,d.to)}
+document.addEventListener('pointerup',drEnd);
+document.addEventListener('pointercancel',e=>{if(DR&&e.pointerId===DR.pid)drCancel()});
+document.addEventListener('touchmove',e=>{if(DR&&DR.active)e.preventDefault()},{passive:false});
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('.lr'))e.preventDefault()});
 document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='gd')S.guideOpen=e.target.open},true);
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261023004111';
+const APP_VER='20261026001619';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false}}catch(e){}}
