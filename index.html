@@ -77,6 +77,10 @@ tr.t td{font-weight:900;background:#f4f7f4}
 .tl{border-left:4px solid #9aa;background:#fff;padding:6px 10px;margin:4px 0;border-radius:0 8px 8px 0;line-height:1.6}
 .tl.hit{border-color:#e6a800}.tl.out{border-color:#8a9}.tl.reach{border-color:#3b82c4}.tl.run{border-color:#c62828;background:#fff7f7}.tl.pit{border-color:#7a5}.tl.sub{border-color:#bbb;background:#f5f5f5;font-size:13px}
 .sc2{display:inline-block;margin-top:2px;font-weight:700;color:#c62828}
+.hp{font-size:14px;line-height:1.7}
+.hh{font-weight:800;margin:16px 0 4px;color:#1b5e3b;font-size:15px}
+.hp ol,.hp ul{margin:4px 0 6px;padding-left:22px}
+textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit}
 .card summary{font-weight:700;cursor:pointer}
 .ab.on.n{background:#c62828;color:#fff;border-color:#c62828}
 </style></head><body>
@@ -116,7 +120,7 @@ const RK=[['得点','得点'],['盗塁','盗塁'],['盗塁死','盗塁死(アウ
 const runLab=r=>RLAB[r.k]+(r.k==='封殺'&&r.b?' '+(r.b==='H'?'本塁':r.b+'塁'):'');
 const short=t=>[...String(t||'')].slice(0,3).join('');
 const POS=[['','守備'],...DIRS,'DP','DH',['代','代打'],'控'];
-const S={team:LS.team||'',uid:'',me:null,ready:!cloud,msg:'',lmode:'join',guideOpen:false,bk:'news',dpSel:'',foBase:'',got:{},linkFail:'',meta:[],players:[],games:[],pas:[],runs:[],pitch:[],pedit:false,pre:null,pe:null,scSel:[],events:[],att:[],evForm:null,evOpen:null,showPast:false,evView:null,pastN:10,lv:'new',appName:'',tab:'sched',gid:null,sub:'in',inn:1,edit:null,f:{season:'',tourn:'',type:''}};
+const S={team:LS.team||'',uid:'',me:null,ready:!cloud,msg:'',lmode:'join',guideOpen:false,bk:'news',dpSel:'',foBase:'',got:{},linkFail:'',meta:[],players:[],games:[],pas:[],runs:[],pitch:[],pedit:false,pre:null,pe:null,scSel:[],events:[],att:[],evForm:null,evOpen:null,showPast:false,evView:null,pastN:10,lv:'new',codes:null,email:'',emailVerified:false,help:false,impOpen:false,imp:null,impText:'',appName:'',tab:'sched',gid:null,sub:'in',inn:1,edit:null,f:{season:'',tourn:'',type:''}};
 let unsubs=[];
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -129,7 +133,7 @@ const eraN=()=>+teamM().inn||(teamM().sport==='base'?9:7);
 const rolesOn=()=>!!teamM().roles;
 const myPlayer=()=>S.players.find(p=>S.me&&p.id===S.me.playerId);
 const isAdmin=()=>{if(!cloud)return true;if(!(S.got.meta&&S.got.players))return false;return !rolesOn()||!!(S.me&&S.me.owner)||!!(myPlayer()&&myPlayer().level==='admin')};
-const ADMIN_ACTS=new Set(['newgame','addp','delp','editp','savet','addl','rml','up','dosub','doswap','undolog','togbat','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','evlineun','pedit','addfor']);
+const ADMIN_ACTS=new Set(['newgame','addp','delp','editp','savet','addl','rml','up','dosub','doswap','undolog','togbat','showcodes','chgjoin','impopen','impcancel','imparse','impsave','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','evlineun','pedit','addfor']);
 const pn=id=>(S.players.find(p=>p.id===id)||{name:'(削除済)'}).name;
 const fmt=x=>x.toFixed(3).replace(/^0/,'');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -193,14 +197,14 @@ function st(ps){const o={pa:ps.length,ab:0,h:0,b:0,hr:0,bb:0,hbp:0,sf:0,rbi:0,so
   if(r==='振'||r==='振逃')o.so++;if(r==='併殺')o.gdp++}
  o.avg=o.ab?o.h/o.ab:0;const d=o.ab+o.bb+o.hbp+o.sf;o.obp=d?(o.h+o.bb+o.hbp)/d:0;o.slg=o.ab?o.b/o.ab:0;o.ops=o.obp+o.slg;return o}
 
-function loginV(){const nw=S.lmode==='new'&&cloud;
+function loginV(){if(S.lmode==='owner'&&cloud)return ownerLoginV();const nw=S.lmode==='new'&&cloud;
  return`<div class="card"><h2 style="margin-top:0">${nw?'チームを新規追加':'チームに参加'}</h2>${S.msg?`<p class="note" style="color:#a33">${esc(S.msg)}</p>`:''}
 <p class="note">${nw?'新しいチームを作ります。チームIDと合言葉は、メンバーに伝えるものです。「チーム作成コード」は、管理者から指示があった場合だけ入力します(通常は空欄)。':'チームID・合言葉・背番号を入力します。この端末では最初の1回だけです(初回はインターネットに接続してください)。'}${cloud?'':'<br><b>※現在は共有設定前のため、この端末内だけに保存されます。</b>'}</p>
 ${nw?'<div class="row"><input id="tnm2" placeholder="チーム名"></div><div class="row" style="margin-top:8px"><select id="tsp2"><option value="soft">ソフトボール</option><option value="base">野球</option></select><select id="tinn2"><option value="7">7回制</option><option value="9">9回制</option><option value="6">6回制</option><option value="5">5回制</option></select></div>':''}
 <div class="row" style="margin-top:${nw?8:0}px"><input id="tin" placeholder="${nw?'チームID(英小文字・数字・ハイフン 3〜30字)':'チームID'}" autocapitalize="off" value="${nw?'':esc(LS.team||'')}"></div>
 ${cloud?`<div class="row" style="margin-top:8px"><input id="tcode" type="password" placeholder="${nw?'合言葉(6文字以上・新しく決める)':'合言葉'}" autocapitalize="off"></div>${nw?'<div class="row" style="margin-top:8px"><input id="tcc" type="password" placeholder="チーム作成コード(通常は空欄)" autocapitalize="off"></div>':''}${nw?'<div class="row" style="margin-top:8px"><input id="tadm2" type="password" placeholder="管理者用の合言葉(6文字以上・新しく決める)" autocapitalize="off"></div>':''}<div class="row" style="margin-top:8px"><input id="tno" placeholder="${nw?'あなたの背番号(ない場合は空欄)':'背番号(ない場合は空欄)'}" inputmode="numeric"></div>${nw?'':'<div class="row" style="margin-top:8px"><input id="tadm" type="password" placeholder="管理者用の合言葉(管理者の方のみ)" autocapitalize="off"></div>'}`:''}
 <button class="b" style="margin-top:8px;width:100%" data-a="${nw?'mkteam':'join'}">${nw?'チームを作成して参加':'参加する'}</button>
-${cloud?`<button class="g" style="margin-top:8px;width:100%" data-a="lmode" data-id="${nw?'join':'new'}">${nw?'← 既存のチームに参加する':'チームを新規追加する'}</button>`:''}</div>`}
+${cloud?`<button class="g" style="margin-top:8px;width:100%" data-a="lmode" data-id="${nw?'join':'new'}">${nw?'← 既存のチームに参加する':'チームを新規追加する'}</button>${nw?'':'<button class="g" style="margin-top:8px;width:100%" data-a="lmode" data-id="owner">オーナーの方はこちら(メールでログイン)</button>'}`:''}</div>`}
 
 let DR=null;
 function reorderSlot(from,to){const g=S.games.find(x=>x.id===S.gid);if(!g||!isAdmin()||from===to)return;const L2=cp(slotsOf(g)),x=L2.splice(from,1)[0];L2.splice(to,0,x);saveSlots(g,L2)}
@@ -257,7 +261,7 @@ ${gs0.length?gs0.map((g,k)=>{const hasG=g.gid&&S.games.some(x=>x.id===g.gid);ret
 function evRow(e){const am={};S.att.filter(a=>a.eid===e.id).forEach(a=>{am[a.pid]=a});let y=0,n=0,m=0;S.players.forEach(p=>{const a=am[p.id];if(a){if(a.v==='○')y++;else if(a.v==='×')n++;else if(a.v==='△')m++}});const un=S.players.length-y-n-m,past=(e.date||'')<today(),t=evTitle(e);
  return`<div class="card${past?' past':''}" data-a="evview" data-id="${e.id}" style="cursor:pointer"><div class="row" style="flex-wrap:nowrap"><b style="flex:1;min-width:0">${esc(dfmt(e.date))}${evMeet(e)?' 集合 '+esc(evMeet(e)):''}</b><span class="chip${e.type==='公式戦'?' h':''}" style="flex:0 0 auto;min-width:0">${esc(e.type||'')}</span></div>
 ${t?`<div style="margin:2px 0">${isGT(e.type)&&t!==e.type?'対 ':''}${esc(t)}</div>`:''}${e.place?`<div class="note">場所: ${esc(e.place)}</div>`:''}<div class="note" style="margin-top:4px"><b>参加 ${y}</b>　欠席 ${n}　未定 ${m}　<span class="mute">未回答 ${un}</span></div></div>`}
-const evTail=()=>`<div class="row" style="margin-top:14px"><button class="g" data-a="chteam">チームを切り替える</button></div><div style="margin-top:8px">${guideBox()}</div>`;
+const evTail=()=>`<div class="row" style="margin-top:14px"><button class="g" data-a="chteam">チームを切り替える</button></div><div style="margin-top:8px">${helpBtn()}<div style="margin-top:8px">${guideBox()}</div></div>`;
 function schedV(){
  if(S.evView){const e=S.events.find(x=>x.id===S.evView);if(e)return`<div class="row" style="margin-bottom:8px"><button class="g" data-a="evback" style="flex:0 0 auto">← 予定一覧</button></div>${S.evForm&&isAdmin()?evFormV():''}`+evCard(e)+evTail();S.evView=null}
  const td=today(),up=S.events.filter(e=>(e.date||'')>=td).sort(evCmp),past=S.events.filter(e=>(e.date||'')<td).sort((a,b)=>evCmp(b,a));
@@ -314,11 +318,65 @@ function bookDetail(g,L,P,R,mx,slOf){const info={},outs={},us=nrm(g.sc&&g.sc.us)
  const t=st(P);h+=`<td>${t.ab}</td><td>${t.h}</td><td>${t.rbi}</td><td>${R.filter(r=>r.k==='得点').length}</td><td>${R.filter(r=>r.k==='盗塁').length}</td></tr></table></div>
 <p class="note">緑の線は、打者や走者が自分の打席・盗塁・暴投/捕逸で進んだ塁までの道すじです。緑の塗りつぶしは得点(ホームイン)を表します。他の打者の安打などで進んだ分は、線には描かれません。赤い丸の数字は、その回のアウトの順番です。●は打点、SB=盗塁、WP=暴投、PB=捕逸、CS=盗塁死、走死=走塁死、FO=封殺、GDP・DP=併殺です。ゴロのアウトは、一塁への送球(例: 6-3)として表示しています。残=残塁(推定)です。</p>`;
  return h}
+const IMPPOS=[[/^(投手|ピッチャー|P)$/i,'投'],[/^(捕手|キャッチャー|C)$/i,'捕'],[/^(一塁手|ファースト|1B)$/i,'一'],[/^(二塁手|セカンド|2B)$/i,'二'],[/^(三塁手|サード|3B)$/i,'三'],[/^(遊撃手|ショート|SS)$/i,'遊'],[/^(左翼手|レフト|LF)$/i,'左'],[/^(中堅手|センター|CF)$/i,'中'],[/^(右翼手|ライト|RF)$/i,'右'],[/^(外野手|OF)$/i,'OF'],[/^(内野手|IF)$/i,'IF'],[/^(指名打者|DH)$/i,'DH'],[/^DP$/i,'DP']];
+function parsePlayers(text){const rows=[],skipped=[];
+ for(const raw of String(text||'').normalize('NFKC').split(/\r?\n/)){let line=raw.trim();if(!line)continue;
+  if(/(背番号|番号|氏名|選手名|名前|ポジション|守備)/.test(line)&&!/\d/.test(line.replace(/背番号|番号/g,'')))continue;
+  let no='';const m=line.match(/(?:^|[\s,、|#＃(（\[「])(?:No\.?|NO\.?|背番号)?\s*(\d{1,3})(?=$|[\s,、|.)）\]」番:])/);
+  if(m){no=m[1];line=line.replace(m[0],' ')}
+  line=line.replace(/[(（\[「]([^)）\]」]*)[)）\]」]/g,' $1 ');
+  const names=[];let pos='',sub='';
+  for(let tk of line.split(/[\s,、|｜/／\t]+/)){tk=tk.replace(/^[(（\[「]+|[)）\]」]+$/g,'');if(!tk||/^[番.:]+$/.test(tk))continue;
+   let hit=IMPPOS.find(x=>x[0].test(tk));
+   if(hit){const v=hit[1];if(v==='OF')sub+='左中右';else if(v==='IF')sub+='一二三遊';else if(!pos)pos=v;else if(v.length===1)sub+=v;continue}
+   if(/^[投捕一二三遊左中右・]{1,3}$/.test(tk)&&/[投捕一二三遊左中右]/.test(tk)){for(const c of tk.replace(/・/g,'')){if(!pos)pos=c;else sub+=c}continue}
+   if(/^([右左両]投[右左両]?打?|[右左両]打|[右左両][右左両])$/.test(tk))continue;
+   if(/^(キャプテン|主将|副将|監督|コーチ|マネージャー|主務|選手|部員)$/.test(tk))continue;
+   names.push(tk)}
+  const name=names.every(t=>/[\u3040-\u30ff\u4e00-\u9fff]/.test(t))?names.join(''):names.join(' ');
+  if(!name||!/[A-Za-z\u3040-\u30ff\u4e00-\u9fff]/.test(name)){skipped.push(raw.trim());continue}
+  rows.push({on:true,no,name,pos,sub:[...new Set(sub)].filter(c=>c!==pos).join(''),dup:''})}
+ const seen=new Set();rows.forEach(r=>{const ex=S.players.find(p=>p.name===r.name),exn=r.no&&S.players.find(p=>String(p.no)===String(r.no));
+  if(ex){r.dup='同じ名前の選手が、すでに登録されています';r.on=false}else if(exn){r.dup='同じ背番号('+r.no+')の選手が、すでに登録されています';r.on=false}
+  else if(seen.has(r.name)){r.dup='貼り付けの中に、同じ名前があります';r.on=false}seen.add(r.name)});
+ return{rows,skipped}}
+function impV(){if(!S.impOpen)return'';const im=S.imp;
+ let h=`<div class="card"><b>選手の貼り付け取り込み</b><p class="note" style="margin:6px 0">他のスコアアプリやスケジュールサイトの選手一覧(背番号・名前・ポジション)を、コピーして、下の欄に貼り付けてください。1行に1人です。表からコピーした場合も、そのまま貼り付けられます。</p><textarea id="imptx" rows="8" placeholder="例:&#10;1 山田太郎 投手&#10;2 鈴木一郎 捕手&#10;10 佐藤次郎 遊撃手">${esc(S.impText||'')}</textarea><div class="row" style="margin-top:8px"><button class="b" data-a="imparse">読み取る</button><button class="g" data-a="impcancel">閉じる</button></div></div>`;
+ if(im){h+=`<h2>読み取り結果(${im.rows.length}人)</h2><p class="note" style="margin:-4px 0 8px">内容を確認して、直せます。チェックを外した人は、登録しません。背番号がない行は、背番号が空欄になります。</p>`;
+  h+=im.rows.map((r,i)=>`<div class="card"><div class="row" style="flex-wrap:nowrap;align-items:center"><input type="checkbox" data-imp="${i}:on"${r.on?' checked':''} style="flex:0 0 22px;min-width:0;width:22px"><input data-imp="${i}:no" value="${esc(r.no)}" placeholder="背番号" inputmode="numeric" style="flex:0 0 70px;min-width:0"><input data-imp="${i}:name" value="${esc(r.name)}" placeholder="名前"></div><div class="row" style="margin-top:6px"><select data-imp="${i}:pos">${opt([['','メインポジション'],...DIRS,'DP','DH'],r.pos)}</select><input data-imp="${i}:sub" value="${esc(r.sub)}" placeholder="サブポジ(例: 二三)"></div>${r.dup?`<div class="note" style="color:#a33;margin-top:4px">${esc(r.dup)}</div>`:''}</div>`).join('');
+  if(im.skipped.length)h+=`<p class="note">読み取れなかった行: ${im.skipped.map(esc).join(' / ')}</p>`;
+  h+=im.rows.length?`<button class="b" style="width:100%;margin-top:8px" data-a="impsave">チェックした選手を登録する</button>`:'<div class="empty">読み取れる選手がありませんでした。1行に1人、「背番号 名前 ポジション」の形で貼り付けてください。</div>'}
+ return h}
+const helpBtn=()=>`<button class="g" style="width:100%;margin-top:8px" data-a="help">📖 はじめての方へ: 使い方を見る</button>`;
+function helpV(){return`<div class="row" style="margin-bottom:8px;flex-wrap:nowrap"><button class="g" data-a="helpback" style="flex:0 0 auto;min-width:0">← 戻る</button><b style="flex:1">使い方(はじめての方へ)</b></div>
+<div class="card hp">
+<div class="hh">このアプリでできること</div><ul><li>練習・試合の予定と、メンバーの出欠</li><li>試合の記録(打席・走塁・投手)、成績の集計、テキスト速報</li><li>スマホのホーム画面に追加して、アプリのように使えます</li></ul>
+<div class="hh">出てくる言葉</div><ul><li><b>チームID</b>: チームの名前がわりの、英数字のID(例: tigers-8k3q)</li><li><b>合言葉</b>: チームに参加するときの、メンバー共通の暗証(6文字以上)</li><li><b>管理者用の合言葉</b>: 管理者だけが知る合言葉。合言葉とは別のものです</li><li><b>背番号</b>: 参加するときに入力します。選手マスタの、同じ背番号の選手と結びつきます</li><li><b>オーナー</b>: チームを作った人(最初の管理者)</li><li><b>管理者</b>: すべての操作ができる人 / <b>一般</b>: 見ることと、自分の出欠の入力だけできる人</li></ul>
+<div class="hh">1. 代表者(オーナー)が最初にやること</div><ol><li>アプリのURLを開き、「チームを新規追加する」を押します。</li><li>チーム名・競技・イニング数・チームID・合言葉・管理者用の合言葉・自分の背番号を入力して、「チームを作成して参加」を押します(「チーム作成コード」は、通常は空欄です)。</li><li>「⚙ 設定」を開き、選手マスタに選手を登録します(名前・背番号・ポジション)。他のサイトの選手一覧があれば、「貼り付けて、まとめて登録する」が使えます。</li><li>自分も選手として登録し、「操作レベル」を「管理者」にします(端末を替えても、背番号と管理者用の合言葉で戻れます)。</li><li>設定の「オーナーのアカウント保護」で、メールアドレスとパスワードを登録します(端末をなくしたとき、ログイン画面の「オーナーの方はこちら」から戻れます)。</li><li>メンバーに、アプリのURL・チームID・合言葉を伝えます。管理者用の合言葉は、管理者にだけ伝えます。</li></ol>
+<div class="hh">2. メンバーが最初にやること</div><ol><li>伝えられたURLを開きます(ホーム画面に追加しておくと便利です)。</li><li>チームID・合言葉・背番号を入力して、「参加する」を押します。この端末では、最初の1回だけです。</li><li>背番号が選手マスタにあれば、自分の出欠を入力できます。ない場合は、管理者に、登録を頼んでください。</li></ol>
+<div class="hh">3. 管理者を増やす</div><ol><li>選手マスタで、その人の「操作レベル」を「管理者」にします。</li><li>その人に、管理者用の合言葉を伝えます。</li><li>その人が、「⚙ 設定」の「この端末の権限」に、管理者用の合言葉を入力して、「認証」を押します(参加するときに、「管理者用の合言葉」の欄に入れても構いません)。</li></ol><div class="note">すでにあるチームで、管理者機能をまだ有効にしていない場合は、設定の「この端末の権限」から、有効にできます(最初に押した人が、オーナーになります)。</div>
+<div class="hh">4. 一般と管理者の違い</div><ul><li><b>一般</b>: 予定・試合・成績・集計を見る。自分の出欠を入力する。</li><li><b>管理者</b>: 上に加えて、予定・試合・成績・選手マスタ・チームマスタの編集。他の人の出欠の代理入力。</li></ul>
+<div class="hh">5. ふだんの使い方</div><ul><li><b>予定と出欠</b>: 「予定」タブ →「＋予定を追加」(管理者)。メンバーは、予定をタップして、○参加 / △未定 / ×不参加を選びます。「LINEで共有」「内容をコピー」で、グループLINEに連絡できます。</li><li><b>試合を記録する(管理者)</b>: 予定の「試合を作成」、または「試合」タブから作成します。「入力」タブで、①打順を作る(選手を追加。「≡」のドラッグや長押しで並べ替え) ②打席を入力 ③走塁・得点を入力 ④「投手」タブで、回ごとの投手成績を入力します。得点は、未入力でも構いません(打点を入れると、自動で加算されます)。</li><li><b>代打・守備交代</b>: 「選手交代」「守備位置の入れ替え」で行います。間違えたときは、「交代の履歴」の「取消」を押します。</li><li><b>間違えたとき</b>: 「入力済み」の「✎」で直し、「✕」で消します。</li><li><b>見る</b>: 試合の「速報」「成績」「スコアブック」と、「集計」タブ。</li></ul>
+<div class="hh">6. 困ったとき</div><ul><li><b>合言葉を忘れた</b>: 管理者が、「⚙ 設定」の「合言葉の確認・変更」で、確認できます。</li><li><b>端末をなくした(オーナー)</b>: ログイン画面の「オーナーの方はこちら」から、メールでログインします。</li><li><b>画面が古い</b>: 画面の上に青い帯が出たら、タップして更新します。</li><li><b>ホーム画面に追加したい</b>: 「ホーム画面への追加方法」を見てください(ログイン画面・予定・設定の下にあります)。</li></ul>
+</div>`}
 function guideBox(){return`<details class="card" id="gd"${S.guideOpen?' open':''}><summary>📲 ホーム画面への追加方法(アプリのように使えます)</summary><div class="note" style="margin-top:8px;line-height:1.7">
 <b>iPhone(Safari)</b><ol style="margin:4px 0 8px;padding-left:20px"><li>Safariでこのページを開きます。</li><li>画面下の共有ボタン(四角から上向きの矢印のマーク)を押します。</li><li>「ホーム画面に追加」を選び、「追加」を押します。</li></ol>
 <b>Android(Chrome)</b><ol style="margin:4px 0 8px;padding-left:20px"><li>右上の「︙」を押します。</li><li>「ホーム画面に追加」(または「アプリをインストール」)を選びます。</li></ol>
 <b>パソコン</b><div style="margin:4px 0 8px">Ctrl + D(Macは ⌘ + D)で、ブックマークに追加できます。</div>
 <b>ポイント</b><ul style="margin:4px 0 0;padding-left:20px"><li>ログインしてから追加すると、ホーム画面の名前が、チーム名になります。</li><li>ホーム画面のアイコンから最初に開いたときは、もう一度、チームID・合言葉・背番号の入力が必要です(1回だけ)。</li></ul></div></details>`}
+function authMsg(e){const c=(e&&e.code)||'';
+ return({'auth/operation-not-allowed':'Firebaseで「メール/パスワード」のログイン方法が有効になっていません。Firebaseコンソールの Authentication で有効にしてください',
+ 'auth/email-already-in-use':'このメールアドレスは、すでに別のアカウントで使われています','auth/credential-already-in-use':'このメールアドレスは、すでに別のアカウントで使われています',
+ 'auth/invalid-email':'メールアドレスの形式が正しくありません','auth/weak-password':'パスワードが弱すぎます。8文字以上の、推測されにくいものにしてください',
+ 'auth/invalid-credential':'メールアドレスまたはパスワードが違います','auth/wrong-password':'メールアドレスまたはパスワードが違います','auth/user-not-found':'メールアドレスまたはパスワードが違います',
+ 'auth/too-many-requests':'短時間に何度も試したため、しばらく待ってからやり直してください','auth/network-request-failed':'接続できません。インターネットの接続を確認してください'})[c]||('できませんでした'+(c?'('+c+')':''))}
+function codeCard(){if(!cloud||!isAdmin())return'';const c=S.codes;
+ return`<div class="card" style="margin-top:8px"><b>合言葉の確認・変更</b><p class="note" style="margin:6px 0">合言葉を忘れたときは、管理者がここで確認できます。変更しても、すでに参加している端末は、そのまま使えます(新しく参加する人が、新しい合言葉を使います)。</p>${c?`<div class="note" style="margin-bottom:6px">チームの合言葉: <b>${esc(c.joinCode||'')}</b>${c.adminCode?`<br>管理者用の合言葉: <b>${esc(c.adminCode)}</b>`:''}</div>`:''}<div class="row"><button class="g" data-a="showcodes">${c?'隠す':'合言葉を確認する'}</button><button class="g" data-a="chgjoin">チームの合言葉を変更</button></div></div>`}
+function acctCard(){if(!cloud||!(S.me&&S.me.owner))return'';
+ return`<div class="card" style="margin-top:8px"><b>オーナーのアカウント保護</b>${S.email?`<p class="note" style="margin:6px 0">登録済み: <b>${esc(S.email)}</b>${S.emailVerified?'':'(確認メールのリンクを、まだ開いていません)'}<br>端末をなくしたときは、ログイン画面の「オーナーの方はこちら」から、このメールアドレスでログインすると、オーナーに戻れます。</p>`:`<p class="note" style="margin:6px 0">メールアドレスとパスワードを登録しておくと、端末をなくしたり、データを消したりしても、オーナーに戻れます。パスワードは、このアプリには保存されません(Firebaseが管理します)。</p><div class="row"><input id="aem" type="email" placeholder="メールアドレス" autocapitalize="off"></div><div class="row" style="margin-top:8px"><input id="apw" type="password" placeholder="パスワード(8文字以上)" autocapitalize="off"><button class="b" data-a="linkemail" style="flex:0 0 auto">登録</button></div>`}</div>`}
+function ownerLoginV(){return`<div class="card"><h2 style="margin-top:0">オーナーとしてログイン</h2>${S.msg?`<p class="note" style="color:#a33">${esc(S.msg)}</p>`:''}<p class="note">オーナーのメールアドレスを登録済みの方が、新しい端末や、データを消したあとに使います。</p>
+<div class="row"><input id="tin" placeholder="チームID" autocapitalize="off" value="${esc(LS.team||'')}"></div><div class="row" style="margin-top:8px"><input id="tem" type="email" placeholder="メールアドレス" autocapitalize="off"></div><div class="row" style="margin-top:8px"><input id="tpw" type="password" placeholder="パスワード" autocapitalize="off"></div>
+<button class="b" style="margin-top:8px;width:100%" data-a="ownerlogin">ログイン</button><button class="g" style="margin-top:8px;width:100%" data-a="resetpw">パスワードを忘れた(再設定メールを送る)</button><button class="g" style="margin-top:8px;width:100%" data-a="lmode" data-id="join">← 通常の参加画面に戻る</button></div>`}
 function roleCard(){if(!cloud)return'';const adm=isAdmin();
  let b=`<b>この端末の権限: ${adm?(S.me&&S.me.owner?'オーナー(管理者)':'管理者'):'一般(閲覧・出欠のみ)'}</b>`;
  if(!rolesOn())b+=`<p class="note" style="margin:6px 0">管理者機能は、まだ有効になっていません。いまは、チームの全員が編集できます。有効にすると、オーナーと、選手マスタで「管理者」にした人だけが編集でき、他の人は、閲覧と自分の出欠の入力だけになります。</p><button class="b" style="width:100%" data-a="claimowner">管理者機能を有効にする(この端末がオーナーになります)</button>`;
@@ -327,14 +385,14 @@ function roleCard(){if(!cloud)return'';const adm=isAdmin();
  return`<div class="card" style="margin-top:8px">${b}</div>`}
 function settingsV(){return`<h2 style="margin-top:0">選手・チーム設定</h2>
 <div class="card"><div class="row" style="flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>${esc(tname()||S.team)}</b><div class="note">チームID: ${esc(S.team)}(メンバーに共有するのは、このIDと合言葉です)</div></div><button class="g" data-a="chteam" style="flex:0 0 auto;min-width:0">チームを切り替える</button></div>${cloud&&S.me?`<p class="note" style="margin:8px 0 0">この端末の本人: ${S.me.playerId?esc(pn(S.me.playerId))+'(背番号 '+esc(S.me.no)+')':'未紐づけ(背番号 '+esc(S.me.no||'なし')+' が選手マスタにありません)'}</p>`:''}</div>
-${roleCard()}${isAdmin()?`<h2>チームマスタ</h2><div class="card"><div class="row"><input id="tnm" placeholder="チーム名" value="${esc(tname())}"></div><div class="row" style="margin-top:8px"><input id="tlu" placeholder="グループLINEの招待リンク(任意)" value="${esc(teamM().lineUrl||'')}" autocapitalize="off"></div><p class="note" style="margin:4px 0 0">登録すると、予定に「コピーしてグループLINEへ」のボタンが出ます。リンクの種類によっては、グループのトーク画面でなく、参加の確認画面が開くことがあります。</p><div class="row" style="margin-top:8px"><select id="tsp">${opt([['soft','ソフトボール'],['base','野球']],sportV())}</select><select id="tinn">${opt([[5,'5回制'],[6,'6回制'],[7,'7回制'],[9,'9回制']],eraN())}</select></div><div class="row" style="margin-top:8px"><button class="b" data-a="savet">保存</button></div><p class="note" style="margin:8px 0 0">試合のイニング数は、投手の防御率の換算(自責点×イニング数÷投球回)と、スコアブックの回数の表示に使います。草野球・少年野球は7回制を選んでください。</p></div>`:''}`+playersV()+`<div style="margin-top:14px">`+guideBox()+`</div>`}
+${roleCard()}${codeCard()}${acctCard()}${isAdmin()?`<h2>チームマスタ</h2><div class="card"><div class="row"><input id="tnm" placeholder="チーム名" value="${esc(tname())}"></div><div class="row" style="margin-top:8px"><input id="tlu" placeholder="グループLINEの招待リンク(任意)" value="${esc(teamM().lineUrl||'')}" autocapitalize="off"></div><p class="note" style="margin:4px 0 0">登録すると、予定に「コピーしてグループLINEへ」のボタンが出ます。リンクの種類によっては、グループのトーク画面でなく、参加の確認画面が開くことがあります。</p><div class="row" style="margin-top:8px"><select id="tsp">${opt([['soft','ソフトボール'],['base','野球']],sportV())}</select><select id="tinn">${opt([[5,'5回制'],[6,'6回制'],[7,'7回制'],[9,'9回制']],eraN())}</select></div><div class="row" style="margin-top:8px"><button class="b" data-a="savet">保存</button></div><p class="note" style="margin:8px 0 0">試合のイニング数は、投手の防御率の換算(自責点×イニング数÷投球回)と、スコアブックの回数の表示に使います。草野球・少年野球は7回制を選んでください。</p></div>`:''}`+playersV()+`<div style="margin-top:14px">`+helpBtn()+guideBox()+`</div>`}
 function playersV(){const adm=isAdmin(),lv=p=>p.level==='admin'?'管理者':'一般';
  const list=S.players.length?`<div class="card">${[...S.players].sort((a,b)=>(+a.no||999)-(+b.no||999)).map(p=>`<div class="pa"><span>${esc(p.no)} ${esc(p.name)} <small class="mute">${p.pos?esc(p.pos):''}${subsOf(p).length?' / '+esc(subsOf(p).join('・')):''}${rolesOn()&&p.level==='admin'?' / 管理者':''}</small></span>${adm?`<span><select data-plv="${p.id}" style="width:auto;padding:4px"${rolesOn()?'':' title="管理者機能を有効にすると使われます"'}>${opt([['user','一般'],['admin','管理者']],p.level==='admin'?'admin':'user')}</select> <button class="g" data-a="editp" data-id="${p.id}">✎</button><button class="x" data-a="delp" data-id="${p.id}">✕</button></span>`:''}</div>`).join('')}</div>`:'<div class="empty">選手が登録されていません。</div>';
  if(!adm)return`<h2>選手一覧</h2>`+list;
  return`<h2>選手マスタ</h2><div class="card"><div class="row"><input id="pnm" placeholder="名前"><input id="pno" placeholder="背番号" inputmode="numeric"></div>
 <div class="row" style="margin-top:8px"><select id="ppos">${opt([['','メインポジション'],...DIRS,'DP','DH'])}</select><input id="psub" placeholder="サブポジ(例: 二・三)"></div>
 <div class="row" style="margin-top:8px"><select id="plvl">${opt([['user','操作レベル: 一般(閲覧・出欠のみ)'],['admin','操作レベル: 管理者(全機能)']],'user')}</select><button class="b" data-a="addp" style="flex:0 0 auto">追加</button></div>${cloud&&!rolesOn()?'<p class="note" style="margin:6px 0 0">※「操作レベル」は、管理者機能を有効にしたあとから使われます(設定の上のほうの案内を見てください)。</p>':''}</div>
-<h2>登録済みの選手</h2>`+list}
+<div class="row" style="margin-top:8px"><button class="g" data-a="impopen" style="width:100%">📋 他のサイトの選手一覧を貼り付けて、まとめて登録する</button></div>${impV()}<h2>登録済みの選手</h2>`+list}
 
 const POSN={投:'ピッチャー',捕:'キャッチャー',一:'ファースト',二:'セカンド',三:'サード',遊:'ショート',左:'レフト',中:'センター',右:'ライト'};
 function paText(p){const pos=POSN[p.d]||'',r=p.r,kk=p.k||'';
@@ -541,9 +599,10 @@ function draw(){
  $('#ttl').textContent=S.team?(tname()||S.team):'やきう・ソフトボール成績表';document.title=$('#ttl').textContent;
  if(S.team&&S.appName!==$('#ttl').textContent){S.appName=$('#ttl').textContent;setAppName(S.appName)}$('#nv').hidden=!S.team;
  if(!S.ready){$('#m').innerHTML='<div class="empty">読み込み中…</div>';return}
+ if(S.help){$('#m').innerHTML=helpV();return}
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.id===S.tab));
- if(!S.team){$('#m').innerHTML=loginV()+guideBox();return}
- const ae=document.activeElement;if(ae&&ae.tagName==='INPUT'&&ae.dataset.sc===undefined&&ae.value)return;
+ if(!S.team){$('#m').innerHTML=loginV()+helpBtn()+guideBox();return}
+ const ae=document.activeElement;if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')&&ae.dataset.sc===undefined&&ae.value)return;
  $('#m').innerHTML=S.tab==='sched'?schedV():S.tab==='games'?(S.gid?gameV():gamesV()):S.tab==='settings'?settingsV():statsV();
  tg()}
 function updRbi(){const g=S.games.find(x=>x.id===S.gid),sl=$('#rbi'),ii=$('#inn');if(!g||!sl||!ii)return;
@@ -590,6 +649,23 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
    .then(()=>{S.me={...S.me,owner:true,adminCode:c};return col(S.team,'members').doc(S.uid).set(S.me)})
    .then(()=>{draw();alert('管理者機能を有効にしました。選手マスタで、管理者にする人の操作レベルを設定してください')})
    .catch(()=>alert('有効にできませんでした。すでに他の人が有効にした可能性があります'))}
+ else if(a==='impopen'){S.impOpen=!S.impOpen;if(!S.impOpen){S.imp=null}draw()}
+ else if(a==='impcancel'){S.impOpen=false;S.imp=null;S.impText='';draw()}
+ else if(a==='imparse'){const tx=$('#imptx').value||'';S.impText=tx;S.imp=parsePlayers(tx);draw()}
+ else if(a==='impsave'){const rs=((S.imp&&S.imp.rows)||[]).filter(r=>r.on&&(r.name||'').trim());if(!rs.length)return alert('登録する選手が、選ばれていません');
+  rs.forEach(r=>put('players',{id:uid(),name:r.name.trim(),no:(r.no||'').trim(),pos:r.pos||'',sub:(r.sub||'').trim(),level:'user'}));
+  S.imp=null;S.impOpen=false;S.impText='';draw();alert(rs.length+'人を登録しました')}
+ else if(a==='help'){S.help=true;draw();window.scrollTo(0,0)}
+ else if(a==='helpback'){S.help=false;draw()}
+ else if(a==='showcodes'){if(S.codes){S.codes=null;draw();return}fdb.collection('teams').doc(S.team).get().then(d=>{S.codes=d.data()||{};draw()}).catch(()=>alert('確認できませんでした(管理者のみ確認できます)'))}
+ else if(a==='chgjoin'){const c=(prompt('新しいチームの合言葉(6文字以上)')||'').trim();if(c.length<6)return alert('6文字以上にしてください');if(S.codes&&c===S.codes.adminCode)return alert('管理者用の合言葉とは、違うものにしてください');
+  fdb.collection('teams').doc(S.team).update({joinCode:c}).then(()=>{S.me={...S.me,code:c};col(S.team,'members').doc(S.uid).set(S.me).catch(()=>{});if(S.codes)S.codes={...S.codes,joinCode:c};draw();alert('チームの合言葉を変更しました。新しく参加する人は、新しい合言葉を使います')}).catch(()=>alert('変更できませんでした(管理者のみ変更できます)'))}
+ else if(a==='linkemail'){const em=($('#aem').value||'').trim(),pw=$('#apw').value||'';if(!em||pw.length<8)return alert('メールアドレスと、8文字以上のパスワードを入力してください');
+  const u=firebase.auth().currentUser;if(!u)return alert('ログインの準備中です。数秒たってからもう一度押してください');
+  u.linkWithCredential(firebase.auth.EmailAuthProvider.credential(em,pw)).then(()=>{S.email=em;try{u.sendEmailVerification()}catch(x){}draw();alert('登録しました。確認のメールを送りました。メールのリンクを開いてください(パスワードの再設定に必要です)')}).catch(e=>alert(authMsg(e)))}
+ else if(a==='ownerlogin'){const t=$('#tin').value.trim(),em=($('#tem').value||'').trim(),pw=$('#tpw').value||'';if(!t||!em||!pw)return alert('チームID・メールアドレス・パスワードを入力してください');
+  firebase.auth().signInWithEmailAndPassword(em,pw).then(cr=>{S.uid=cr.user.uid;return col(t,'members').doc(S.uid).get()}).then(d=>{if(d.exists){LS['mem:'+t+':'+S.uid]='1';S.me=d.data();S.msg='';S.lmode='join';join(t)}else{alert('このアカウントは、そのチームに参加していません');draw()}}).catch(e=>alert(authMsg(e)))}
+ else if(a==='resetpw'){const em=($('#tem').value||'').trim();if(!em)return alert('メールアドレスを入力してください');firebase.auth().sendPasswordResetEmail(em).then(()=>alert('再設定のメールを送りました。メールのリンクから、新しいパスワードを設定してください')).catch(e=>alert(authMsg(e)))}
  else if(a==='chgadm'){const c=(prompt('新しい管理者用の合言葉(6文字以上)')||'').trim();if(c.length<6)return alert('6文字以上にしてください');
   fdb.collection('teams').doc(S.team).update({adminCode:c}).then(()=>{S.me={...S.me,adminCode:c};col(S.team,'members').doc(S.uid).set(S.me).catch(()=>{});alert('管理者用の合言葉を変更しました')}).catch(()=>alert('変更できませんでした(オーナーのみ変更できます)'))}
  else if(a==='lv'){S.lv=id;draw()}
@@ -612,7 +688,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  else if(a==='chteam'){if(!confirm('別のチームに切り替えますか?\n(切り替えると、ログイン画面に戻ります。もう一度このチームに入るには、合言葉が必要です)'))return;unsubs.forEach(u=>u());S.team='';S.me=null;LS.team='';S.tab='sched';S.gid=null;draw()}
  else if(a==='savet'){const lu=($('#tlu').value||'').trim();if(lu&&!/^https:\/\/(line\.me|lin\.ee)\//.test(lu))return alert('LINEのリンクは、https://line.me/ または https://lin.ee/ で始まるものを入力してください');
   put('meta',{...teamM(),id:'team',name:$('#tnm').value.trim(),sport:$('#tsp').value,inn:+$('#tinn').value||7,lineUrl:lu})}
- else if(a==='tab'){S.tab=id;S.gid=null;if(id==='sched'){S.evView=null;S.evForm=null}draw()}
+ else if(a==='tab'){S.help=false;S.tab=id;S.gid=null;S.codes=null;if(id==='sched'){S.evView=null;S.evForm=null}draw()}
  else if(a==='newgame'){const d=$('#gd').value||today(),o={id:uid(),date:d,opp:$('#go').value.trim(),type:$('#gt').value,tourn:$('#gn').value.trim(),season:d.slice(0,4),slots:[],sc:{us:Array(9).fill(null),them:Array(9).fill(null)},auto:Array(9).fill(false),autoT:Array(9).fill(false),dec:{},bat:$('#gbat').value||'top'};put('games',o);S.gid=o.id;S.sub='in';draw()}
  else if(a==='open'){S.gid=id;S.sub=isAdmin()?'in':'live';draw()}
  else if(a==='back'){S.gid=null;draw()}
@@ -730,7 +806,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  else if(a==='delg'){if(confirm('この試合と全ての打席記録を削除します。よろしいですか?')){S.pas.filter(p=>p.gid===g.id).forEach(p=>del('pas',p.id));S.runs.filter(r=>r.gid===g.id).forEach(r=>del('runs',r.id));S.pitch.filter(p=>p.gid===g.id).forEach(p=>del('pitch',p.id));del('games',g.id);S.gid=null;draw()}}
 });
 document.addEventListener('change',e=>{const t=e.target,g=S.games.find(x=>x.id===S.gid);
- if(!isAdmin()&&(t.dataset.sc!==undefined||t.dataset.pos!==undefined||t.dataset.dec!==undefined||t.dataset.plv!==undefined)){draw();return}
+ if(!isAdmin()&&(t.dataset.sc!==undefined||t.dataset.pos!==undefined||t.dataset.dec!==undefined||t.dataset.plv!==undefined||t.dataset.imp!==undefined)){draw();return}
  if(t.dataset.sc&&g){const side=t.dataset.sc,i=+t.dataset.i,sc={us:nrm(g.sc&&g.sc.us),them:nrm(g.sc&&g.sc.them)},au=au9(g),v=t.value===''?null:Math.max(0,Math.floor(+t.value||0));
   if(side==='us'&&v!=null&&v>=1){const u=Math.max(rbiIn(g,i+1),runsIn(g,i+1));if(v<u){alert((i+1)+'回に記録済みの打点・得点者('+u+')より小さい得点にはできません');draw();return}}
   if(side==='them'&&v!=null&&v>=1){const u=pRuns(g,i+1);if(v<u){alert((i+1)+'回に記録済みの失点('+u+')より小さい得点にはできません');draw();return}}
@@ -749,6 +825,7 @@ document.addEventListener('change',e=>{const t=e.target,g=S.games.find(x=>x.id==
  else if(t.dataset.plv){const p=S.players.find(x=>x.id===t.dataset.plv);if(p)put('players',{...p,level:t.value})}
  else if(t.dataset.f){S.f[t.dataset.f]=t.value;draw()}
  else if(t.dataset.scs!==undefined){S.scSel[+t.dataset.scs]=t.value}
+ else if(t.dataset.imp!==undefined){const[ii,f]=t.dataset.imp.split(':'),r=S.imp&&S.imp.rows[+ii];if(r)r[f]=f==='on'?t.checked:t.value}
  else if(t.dataset.dps!==undefined){S.dpSel=t.value}
  else if(t.dataset.fob!==undefined){S.foBase=t.value}
  else if(t.id==='r'||t.id==='sk')tg()
@@ -776,7 +853,7 @@ document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='gd')S.guideOp
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261026235532';
+const APP_VER='20261028003149';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false}}catch(e){}}
@@ -785,7 +862,7 @@ function boot(){
  draw();const au=firebase.auth();
  au.onAuthStateChanged(async u=>{
   if(!u){try{await au.signInAnonymously()}catch(e){S.ready=true;S.msg='ログインの準備ができません。インターネットの接続を確認してください';draw()}return}
-  S.uid=u.uid;
+  S.uid=u.uid;S.email=u.email||'';S.emailVerified=!!u.emailVerified;
   if(!S.team){S.ready=true;draw();return}
   const k='mem:'+S.team+':'+S.uid;
   if(LS[k]){S.ready=true;col(S.team,'members').doc(S.uid).get().then(d=>{if(d.exists){S.me=d.data();linkMe()}}).catch(()=>{});join(S.team);return}
