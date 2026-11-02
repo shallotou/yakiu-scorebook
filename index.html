@@ -56,6 +56,7 @@ tr.t td{font-weight:900;background:#f4f7f4}
 .sc td.a input{background:#fff3b0}
 .pa.sb{padding-left:16px;background:#f6f9f6}
 .chip.r{background:#d9e8f5}
+.chip.rb{background:#fde4e4;color:#c62828;font-weight:700}
 .nf{display:flex;flex-direction:column;font-size:12px;color:var(--mute);flex:1;min-width:64px}
 .nf input{width:100%}
 .chip.ed{outline:1px dashed #6a8;cursor:pointer}
@@ -591,7 +592,7 @@ function gameV(){
 ${paperSummary(g,L,P,R)}<h2>打席ごとの記録</h2>
 <div class="sw"><table><tr><th class="l">打順</th><th>守</th><th class="l">選手</th><th>打</th><th>安</th><th>点</th><th>得</th><th>盗</th><th class="l">打席</th></tr>`;
   L.forEach((s,i)=>{slotPids(s).forEach((pid,j)=>{const ps=P.filter(p=>p.pid===pid&&slOf(p)===s.id),o=st(ps);
-   h+=`<tr><td>${j?'↳':i+1}</td><td>${pid===s.pid?esc(s.pos==='代'?'代打':s.pos||''):''}</td><td class="l">${esc(pn(pid))}</td><td>${o.ab}</td><td>${o.h}</td><td>${o.rbi}</td><td>${rn(pid,'得点')}</td><td>${rn(pid,'盗塁')}</td><td class="l">${ps.map(p=>`<span class="chip${isHit(p.r)?' h':''}${S.pedit?' ed':''}"${S.pedit?` data-a="editpa" data-id="${p.id}"`:''}>${esc(lab(p))}</span>`).join('')}${S.pedit&&pid===s.pid?`<span class="chip add" data-a="addfor" data-id="${s.id}:${pid}">＋</span>`:''}</td></tr>`})});
+   h+=`<tr><td>${j?'↳':i+1}</td><td>${pid===s.pid?esc(s.pos==='代'?'代打':s.pos||''):''}</td><td class="l">${esc(pn(pid))}</td><td>${o.ab}</td><td>${o.h}</td><td>${o.rbi}</td><td>${rn(pid,'得点')}</td><td>${rn(pid,'盗塁')}</td><td class="l">${ps.map(p=>`<span class="chip${isHit(p.r)?' h':''}${S.pedit?' ed':''}"${S.pedit?` data-a="editpa" data-id="${p.id}"`:''}>${esc(lab(p))}</span>${+p.rbi?`<span class="chip rb">打点${p.rbi}</span>`:''}`).join('')}${S.pedit&&pid===s.pid?`<span class="chip add" data-a="addfor" data-id="${s.id}:${pid}">＋</span>`:''}</td></tr>`})});
   const t=st(P);h+=`<tr class="t"><td></td><td></td><td class="l">計</td><td>${t.ab}</td><td>${t.h}</td><td>${t.rbi}</td><td>${rn0('得点')}</td><td>${rn0('盗塁')}</td><td></td></tr></table></div>`;
   if(S.pedit)h+=`<h2>走塁・得点の記録</h2><div class="card">`+(R.length?R.map(r=>`<div class="pa"><span>${r.inn}回 ${esc(pn(r.pid))}:${runLab(r)}</span><button class="x" data-a="delrun" data-id="${r.id}">✕</button></div>`).join(''):'<div class="mute">記録がありません。</div>')+`<p class="note" style="margin:6px 0 0">追加は「入力」タブの「走塁・得点」から行います。</p></div>`;
   const ev=S.pedit?[]:R.filter(r=>r.k!=='得点');if(ev.length)h+=`<div class="card note">${ev.map(r=>esc(r.inn+'回 '+pn(r.pid)+' '+RLAB[r.k])).join('<br>')}</div>`;
@@ -623,8 +624,8 @@ ${paperSummary(g,L,P,R)}<h2>打席ごとの記録</h2>
   if(S.bk==='detail')h+=bookDetail(g,L,P,R,mx,slOf);else{
   h+=`<div class="sw"><table><tr><th class="l">選手</th>${Array.from({length:mx},(_,i)=>`<th>${i+1}</th>`).join('')}</tr>`;
   L.forEach((s,i)=>{slotPids(s).forEach((pid,j)=>{h+=`<tr><td class="l">${j?'↳':i+1} ${pid===s.pid?esc(s.pos==='代'?'代打':s.pos||''):''} ${esc(pn(pid))}</td>`;
-   for(let n=1;n<=mx;n++)h+=`<td style="min-width:58px">${P.filter(p=>p.pid===pid&&slOf(p)===s.id&&+p.inn===n).map(p=>`<span class="chip${isHit(p.r)?' h':''}">${esc(lab(p))}</span>`).join('')}${R.filter(r=>r.pid===pid&&+r.inn===n).map(r=>`<span class="chip r">${RS[r.k]}</span>`).join('')}</td>`;h+='</tr>'})});
-  h+='</table></div><p class="note">黄色は安打。ゴ=ゴロ、直=ライナー、飛=フライ、進=進塁打、失=エラー、振逃=振り逃げ、野選=野手選択。青は走塁(得=得点、盗=盗塁、盗死=盗塁死、走死=走塁死、暴・捕=暴投・捕逸での進塁)。↳は交代で入った選手。</p>';
+   for(let n=1;n<=mx;n++)h+=`<td style="min-width:58px">${P.filter(p=>p.pid===pid&&slOf(p)===s.id&&+p.inn===n).map(p=>`<span class="chip${isHit(p.r)?' h':''}">${esc(lab(p))}</span>${+p.rbi?`<span class="chip rb">打点${p.rbi}</span>`:''}`).join('')}${R.filter(r=>r.pid===pid&&+r.inn===n).map(r=>`<span class="chip r">${RS[r.k]}</span>`).join('')}</td>`;h+='</tr>'})});
+  h+='</table></div><p class="note">黄色は安打。ゴ=ゴロ、直=ライナー、飛=フライ、進=進塁打、失=エラー、振逃=振り逃げ、野選=野手選択。赤い「打点N」は打点です。青は走塁(得=得点、盗=盗塁、盗死=盗塁死、走死=走塁死、暴・捕=暴投・捕逸での進塁)。↳は交代で入った選手。</p>';
   }
   const fps=L.filter(s=>s.fp);if(fps.length)h+=`<p class="note">FP(守備専門): ${fps.map(s=>esc(pn(s.fp))+'('+esc(s.fpPos||'-')+')').join('、')}</p>`;
   if(!L.length)h+='<div class="empty">打順を作成すると、ここにスコアブックが表示されます。</div>';
@@ -932,7 +933,7 @@ if(typeof location!=='undefined'&&location.hash==='#help')S.help=true;
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261101232740';
+const APP_VER='20261102055904';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false}}catch(e){}}
