@@ -84,6 +84,17 @@ tr.t td{font-weight:900;background:#f4f7f4}
 textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit}
 .card summary{font-weight:700;cursor:pointer}
 .ab.on.n{background:#c62828;color:#fff;border-color:#c62828}
+html,body{overflow-x:hidden;max-width:100%}
+header b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card{min-width:0;overflow-wrap:anywhere}
+.pa>span:first-child{flex:1 1 0;min-width:0;overflow-wrap:anywhere;padding-right:6px}
+.pa .ar{flex:0 0 auto}
+.ab.sm{flex:0 0 38px;padding:7px 0}
+.btng{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.btng button{min-width:0;padding:8px 4px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btng button.x{border:1px solid var(--line);border-radius:6px;color:#a33}
+details.un{margin-top:2px;font-size:13px;color:#a33}
+details.un summary{cursor:pointer;font-weight:700}
 </style></head><body>
 <div id="top"><header><b id="ttl"></b></header>
 <nav id="nv" hidden><button data-a="tab" data-id="sched">予定</button><button data-a="tab" data-id="games">試合</button><button data-a="tab" data-id="stats">集計</button><button data-a="tab" data-id="news">ニュース</button><button data-a="tab" data-id="settings">⚙ 設定</button></nav></div>
@@ -257,8 +268,8 @@ function evCard(e){const adm=isAdmin(),am={};S.att.filter(a=>a.eid===e.id).forEa
 ${gs0.length?gs0.map((g,k)=>{const hasG=g.gid&&S.games.some(x=>x.id===g.gid);return`<div class="row" style="flex-wrap:nowrap;margin:4px 0;align-items:center"><span style="flex:1;min-width:0"><b>${gs0.length>1?GN[k]:'試合'}</b> ${g.time?esc(g.time)+' ':''}${g.opp?'対 '+esc(g.opp):''}</span>${(adm||hasG)?`<button class="g" data-a="evgame" data-id="${e.id}:${k}" style="flex:0 0 auto;min-width:0">${hasG?'記録を開く':'試合を作成'}</button>`:''}</div>`}).join('')+(e.tourn?`<div class="note">${esc(e.tourn)}</div>`:''):`<div style="margin:4px 0"><b>${esc(e.title||'(内容未設定)')}</b></div>`}${e.place?`<div class="note">場所: ${esc(e.place)}</div>`:''}${e.note?`<div class="note">${esc(e.note)}</div>`:''}`;
  h+=my&&past?`<div class="note" style="margin-top:8px">あなたの回答: ${mine?esc(mine):'未回答'}</div>`:my?`<div class="ar"><span style="flex:0 0 auto">自分</span>${AV.map(([s,c,l])=>`<button class="ab ${c}${mine===s?' on':''}" data-a="att" data-id="${e.id}:${my}:${s}">${s} ${l}</button>`).join('')}</div>`:`<div class="note" style="margin-top:8px">${adm?'背番号が選手マスタにないため、自分の出欠は「みんなの出欠」から入力してください。':'背番号が選手マスタにないため、出欠を入力できません。管理者に、選手マスタへの登録を依頼してください。'}</div>`;
  const unNames=pl.filter(p=>!am[p.id]).map(p=>p.name);
- h+=`<div class="note" style="margin-top:6px">○ ${cnt['○']}　△ ${cnt['△']}　× ${cnt['×']}　未回答 ${un}</div>${un?`<div class="note" style="margin-top:2px;color:#a33">未回答: ${esc(unNames.join('、'))}</div>`:''}
-<div class="row" style="margin-top:6px">${past?'':`<button class="g" data-a="evinfo" data-id="${e.id}">内容をコピー</button><button class="g" data-a="evline" data-id="${e.id}">LINEで共有</button>${teamM().lineUrl?`<button class="g" data-a="evgrp" data-id="${e.id}">コピーしてグループLINEへ</button>`:''}`}${adm&&!past&&un?`<button class="g" data-a="evcopy" data-id="${e.id}">未回答者の連絡文をコピー</button><button class="g" data-a="evlineun" data-id="${e.id}">未回答者へLINE</button>`:''}${adm&&!past?`<button class="g" data-a="evedit" data-id="${e.id}">✎ 修正</button>`:''}${adm&&!past?`<button class="x" data-a="evdel" data-id="${e.id}" style="flex:0 0 auto;min-width:0">✕</button>`:''}</div>`;
+ h+=`<div class="note" style="margin-top:6px">○ ${cnt['○']}　△ ${cnt['△']}　× ${cnt['×']}　未回答 ${un}</div>${un?`<details class="un"><summary>未回答 ${un}人(名前を見る)</summary><div class="note" style="color:#a33">${esc(unNames.join('、'))}</div></details>`:''}
+<div class="btng">${past?'':`<button class="g" data-a="evinfo" data-id="${e.id}">内容をコピー</button><button class="g" data-a="evline" data-id="${e.id}">LINEで共有</button>${teamM().lineUrl?`<button class="g" data-a="evgrp" data-id="${e.id}">グループLINEへ</button>`:''}`}${adm&&!past&&un?`<button class="g" data-a="evcopy" data-id="${e.id}">未回答者に連絡(コピー)</button><button class="g" data-a="evlineun" data-id="${e.id}">未回答者へLINE</button>`:''}${adm&&!past?`<button class="g" data-a="evedit" data-id="${e.id}">✎ 修正</button>`:''}${adm&&!past?`<button class="x" data-a="evdel" data-id="${e.id}">✕ 削除</button>`:''}</div>`;
  if(open)h+=`<div style="margin-top:8px">`+(pl.length?pl.map(p=>{const a=am[p.id];return`<div class="pa"><span>${esc(p.no?p.no+' ':'')}${esc(p.name)}${p.id===my?' <small class="mute">(自分)</small>':''}${a&&a.by&&a.by!==p.id?` <small class="mute">(${esc(pn(a.by))}が入力)</small>`:''}</span>${(!past&&(adm||p.id===my))?`<span class="ar" style="margin:0">${AV.map(([s,c])=>`<button class="ab sm ${c}${a&&a.v===s?' on':''}" data-a="att" data-id="${e.id}:${p.id}:${s}">${s}</button>`).join('')}</span>`:`<span class="mute">${a?esc(a.v):'未回答'}</span>`}</div>`}).join(''):'<div class="mute">選手マスタに選手が登録されていません。</div>')+`<p class="note" style="margin:6px 0 0">${past?'過去の予定のため、出欠は変更できません。':(adm?'他の人の出欠も入力できます(「○○が入力」と記録されます)。':'自分の出欠だけ入力できます。')+'同じボタンをもう一度押すと取り消せます。'}</p></div>`;
  return h+`</div>`}
 function evRow(e){const am={};S.att.filter(a=>a.eid===e.id).forEach(a=>{am[a.pid]=a});let y=0,n=0,m=0;S.players.forEach(p=>{const a=am[p.id];if(a){if(a.v==='○')y++;else if(a.v==='×')n++;else if(a.v==='△')m++}});const un=S.players.length-y-n-m,past=(e.date||'')<today(),t=evTitle(e);
