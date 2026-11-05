@@ -87,9 +87,10 @@ textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--li
 html,body{overflow-x:hidden;max-width:100%}
 header b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card{min-width:0;overflow-wrap:anywhere}
-.pa>span:first-child{flex:1 1 0;min-width:0;overflow-wrap:anywhere;padding-right:6px}
-.pa .ar{flex:0 0 auto}
-.ab.sm{flex:0 0 38px;padding:7px 0}
+.pa{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:6px;width:100%;max-width:100%}
+.pa>span{min-width:0;overflow-wrap:anywhere}
+.pa .ar{display:grid;grid-template-columns:repeat(3,38px);gap:5px;margin:0;width:auto}
+.pa .ab.sm{width:38px;min-width:0;max-width:38px;padding:7px 0;flex:none}
 .btng{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
 .btng button{min-width:0;padding:8px 4px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .btng button.x{border:1px solid var(--line);border-radius:6px;color:#a33}
