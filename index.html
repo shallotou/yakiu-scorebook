@@ -72,7 +72,7 @@ tr.t td{font-weight:900;background:#f4f7f4}
 .lr{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .lr.drag{opacity:.9;background:#eaf3ec;box-shadow:0 2px 10px rgba(0,0,0,.3);position:relative;z-index:5;border-radius:8px}
 .lr.over{box-shadow:0 -3px 0 #1b5e3b}
-.grip{color:#789;margin-right:2px;cursor:grab;touch-action:none;padding:4px 2px}
+.grip{color:#789;margin-right:2px;cursor:grab;padding:4px 2px}
 .card.past{opacity:.82}
 .th{display:flex;justify-content:space-between;background:#1b5e3b;color:#fff;border-radius:8px;padding:6px 10px;font-weight:700;margin:12px 0 4px}
 .tl{border-left:4px solid #9aa;background:#fff;padding:6px 10px;margin:4px 0;border-radius:0 8px 8px 0;line-height:1.6}
@@ -136,7 +136,7 @@ const eraN=()=>+teamM().inn||(teamM().sport==='base'?9:7);
 const rolesOn=()=>!!teamM().roles;
 const myPlayer=()=>S.players.find(p=>S.me&&p.id===S.me.playerId);
 const isAdmin=()=>{if(!cloud)return true;if(!(S.got.meta&&S.got.players))return false;return !rolesOn()||!!(S.me&&S.me.owner)||!!(myPlayer()&&myPlayer().level==='admin')};
-const ADMIN_ACTS=new Set(['newgame','addp','delp','editp','savet','addl','rml','up','dosub','doswap','undolog','togbat','showcodes','chgjoin','impopen','impcancel','imparse','impsave','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','evlineun','pedit','addfor']);
+const ADMIN_ACTS=new Set(['newgame','setbat','lockorder','unlockorder','finsetup','addp','delp','editp','savet','addl','rml','up','dosub','doswap','undolog','togbat','showcodes','chgjoin','impopen','impcancel','imparse','impsave','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','evlineun','pedit','addfor']);
 const pn=id=>(S.players.find(p=>p.id===id)||{name:'(削除済)'}).name;
 const fmt=x=>x.toFixed(3).replace(/^0/,'');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -210,7 +210,7 @@ ${cloud?`<div class="row" style="margin-top:8px"><input id="tcode" type="passwor
 ${cloud?`<button class="g" style="margin-top:8px;width:100%" data-a="lmode" data-id="${nw?'join':'new'}">${nw?'← 既存のチームに参加する':'チームを新規追加する'}</button>${nw?'':'<button class="g" style="margin-top:8px;width:100%" data-a="lmode" data-id="owner">オーナーの方はこちら(メールでログイン)</button>'}`:''}</div>`}
 
 let DR=null;
-function reorderSlot(from,to){const g=S.games.find(x=>x.id===S.gid);if(!g||!isAdmin()||from===to)return;const L2=cp(slotsOf(g)),x=L2.splice(from,1)[0];L2.splice(to,0,x);saveSlots(g,L2)}
+function reorderSlot(from,to){const g=S.games.find(x=>x.id===S.gid);if(!g||!isAdmin()||g.locked||from===to)return;const L2=cp(slotsOf(g)),x=L2.splice(from,1)[0];L2.splice(to,0,x);saveSlots(g,L2)}
 let lastMf='';
 function setAppName(n){try{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.setAttribute('content',n)}catch(e){}
  try{const l=document.querySelector('link[rel="manifest"]');if(!l||typeof Blob==='undefined'||!window.URL||!URL.createObjectURL)return;const b=new URL('./',location.href).href;
@@ -277,10 +277,7 @@ function schedV(){
 function gamesV(){
  const gs=[...S.games].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
  const adm=isAdmin();
- return(adm?`<h2 style="margin-top:0">試合を作成</h2><div class="card">
-<div class="row"><input type="date" id="gd" value="${today()}"><input id="go" placeholder="対戦相手"></div>
-<div class="row" style="margin-top:8px"><select id="gt">${opt([['official','公式戦'],['practice','練習試合']])}</select><input id="gn" placeholder="大会名(任意)"></div>
-<div class="row" style="margin-top:8px"><select id="gbat"><option value="top">自チームは先攻(表の攻撃)</option><option value="bot">自チームは後攻(裏の攻撃)</option></select></div><button class="b" style="margin-top:8px;width:100%" data-a="newgame">試合を作成</button></div>`:'')+`<h2${adm?'':' style="margin-top:0"'}>試合一覧</h2>`+(gs.length?gs.map(g=>`<div class="card gm" data-a="open" data-id="${g.id}"><div><b>${esc(g.date)} vs ${esc(g.opp||'相手')}</b><br><small>${g.type==='official'?'公式戦':'練習試合'}${g.tourn?' / '+esc(g.tourn):''}</small></div><div class="sc">${sum(g.sc&&g.sc.us)}-${sum(g.sc&&g.sc.them)}</div></div>`).join(''):`<div class="empty">試合がまだありません。${adm?'上のフォームから作成してください。':''}</div>`)}
+ return(adm?`<button class="b" style="width:100%" data-a="newgame">＋ 試合を作成(対戦相手・先攻/後攻・打順を決める)</button>`:'')+`<h2>試合一覧</h2>`+(gs.length?gs.map(g=>`<div class="card gm" data-a="open" data-id="${g.id}"><div><b>${esc(g.date)} vs ${esc(g.opp||'相手')}</b>${g.setup?' <span class="chip">準備中</span>':''}<br><small>${g.type==='official'?'公式戦':'練習試合'}${g.tourn?' / '+esc(g.tourn):''}</small></div><div class="sc">${sum(g.sc&&g.sc.us)}-${sum(g.sc&&g.sc.them)}</div></div>`).join(''):`<div class="empty">試合がまだありません。${adm?'上のフォームから作成してください。':''}</div>`)}
 
 const DN={投:1,捕:2,一:3,二:4,三:5,遊:6,左:7,中:8,右:9},BASE={単:1,失:1,野選:1,四:1,死:1,振逃:1,二:2,三:3,本:4};
 function notn(p){const n=DN[p.d]||'',r=p.r,k=p.k;
@@ -361,7 +358,7 @@ function helpV(){return`<div class="row" style="margin-bottom:8px;flex-wrap:nowr
 <div class="hh">2. メンバーが最初にやること</div><ol><li>伝えられたURLを開きます(ホーム画面に追加しておくと便利です)。</li><li>チームID・合言葉・背番号を入力して、「参加する」を押します。この端末では、最初の1回だけです。</li><li>背番号が選手マスタにあれば、自分の出欠を入力できます。ない場合は、管理者に、登録を頼んでください。</li></ol>
 <div class="hh">3. 管理者を増やす</div><ol><li>選手マスタで、その人の「操作レベル」を「管理者」にします。</li><li>その人に、管理者用の合言葉を伝えます。</li><li>その人が、「⚙ 設定」の「この端末の権限」に、管理者用の合言葉を入力して、「認証」を押します(参加するときに、「管理者用の合言葉」の欄に入れても構いません)。</li></ol><div class="note">すでにあるチームで、管理者機能をまだ有効にしていない場合は、設定の「この端末の権限」から、有効にできます(最初に押した人が、オーナーになります)。</div>
 <div class="hh">4. 一般と管理者の違い</div><ul><li><b>一般</b>: 予定・試合・成績・集計を見る。自分の出欠を入力する。</li><li><b>管理者</b>: 上に加えて、予定・試合・成績・選手マスタ・チームマスタの編集。他の人の出欠の代理入力。</li></ul>
-<div class="hh">5. ふだんの使い方</div><ul><li><b>予定と出欠</b>: 「予定」タブ →「＋予定を追加」(管理者)。メンバーは、予定をタップして、○参加 / △未定 / ×不参加を選びます。「LINEで共有」「内容をコピー」で、グループLINEに連絡できます。</li><li><b>試合を記録する(管理者)</b>: 予定の「試合を作成」、または「試合」タブから作成します。「入力」タブで、①打順を作る(選手を追加。「≡」のドラッグや長押しで並べ替え) ②打席を入力 ③走塁・得点を入力 ④「投手」タブで、回ごとの投手成績を入力します。得点は、未入力でも構いません(打点を入れると、自動で加算されます)。</li><li><b>代打・守備交代</b>: 「選手交代」「守備位置の入れ替え」で行います。間違えたときは、「交代の履歴」の「取消」を押します。</li><li><b>間違えたとき</b>: 「入力済み」の「✎」で直し、「✕」で消します。</li><li><b>見る</b>: 試合の「速報」「成績」「スコアブック」と、「集計」タブ。</li></ul>
+<div class="hh">5. ふだんの使い方</div><ul><li><b>予定と出欠</b>: 「予定」タブ →「＋予定を追加」(管理者)。メンバーは、予定をタップして、○参加 / △未定 / ×不参加を選びます。「LINEで共有」「内容をコピー」で、グループLINEに連絡できます。</li><li><b>試合を記録する(管理者)</b>: 「試合」タブの「＋試合を作成」(または、予定の「試合を作成」)を押し、①対戦相手 ②先攻/後攻 ③打順を決めて、「打順を確定して、成績入力へ」を押します。そのあと、「入力」タブで、①打席を入力 ②走塁・得点を入力 ③「投手」タブで、回ごとの投手成績を入力します。得点は、未入力でも構いません(打点を入れると、自動で加算されます)。</li><li><b>打順の並べ替え</b>: PCは「≡」をドラッグします。スマホは、選手の名前の部分を、約0.5秒長押ししてから、上下にドラッグします(触れただけでは動きません)。「打順を確定」すると、並べ替えや追加・削除ができなくなります。「確定を解除して編集する」で戻せます。代打・守備交代は、確定後も使えます。</li><li><b>代打・守備交代</b>: 「選手交代」「守備位置の入れ替え」で行います。間違えたときは、「交代の履歴」の「取消」を押します。</li><li><b>間違えたとき</b>: 「入力済み」の「✎」で直し、「✕」で消します。</li><li><b>見る</b>: 試合の「速報」「成績」「スコアブック」と、「集計」タブ。</li></ul>
 <div class="hh">6. ニュースとご要望・試合結果の公開</div><ul><li><b>ニュース</b>: 運営からのお知らせと、他のチームの試合結果の更新が出ます(「ニュース」タブ)。</li><li><b>ご要望</b>: 改善してほしい点を、匿名で投稿できます。投稿は、すべての利用者に公開されます。</li><li><b>試合結果の公開(管理者)</b>: 「⚙ 設定」のチームマスタで、「公開しない」「試合結果のみ」「イニングスコアまで」を選べます。選手名と個人成績は、公開されません。初期設定は、公開しない です。</li></ul>
 <div class="hh">7. 困ったとき</div><ul><li><b>合言葉を忘れた</b>: 管理者が、「⚙ 設定」の「合言葉の確認・変更」で、確認できます。</li><li><b>端末をなくした(オーナー)</b>: ログイン画面の「オーナーの方はこちら」から、メールでログインします。</li><li><b>画面が古い</b>: 画面の上に青い帯が出たら、タップして更新します。</li><li><b>ホーム画面に追加したい</b>: 「ホーム画面への追加方法」を見てください(ログイン画面・予定・設定の下にあります)。</li></ul>
 ${S.team?'':`<button class="g" style="width:100%;margin-top:10px" data-a="helpback">← トップページ(ログイン画面)に戻る</button>`}
@@ -518,6 +515,28 @@ function liveV(g,L,P,R,slOf){
  return h+`<p class="note" style="margin-top:12px">自チームの攻撃は、打席・走塁の記録から自動で作成しています(入力した順に並びます)。相手チームの攻撃は、投手成績(回ごとの集計)の要約です。走者の欄は、出塁した順に表示しています。</p>`}
 const logTxt=l=>l.k==='守備入替'?`${l.inn}回 守備入替 ${pn(l.from)}(${l.pos||'-'}) ⇄ ${pn(l.other)}(${l.opos||'-'})`:`${l.inn}回 ${l.n}番 ${l.k} ${pn(l.from)}→${pn(l.to)}${l.pos?'('+l.pos+')':''}`;
 
+function lineupV(g,L,setup){let h='';const lk=!!g.locked&&!setup;
+ const inUse=new Set();L.forEach(s=>{inUse.add(s.pid);if(s.fp)inUse.add(s.fp)});
+ const free=S.players.filter(p=>!inUse.has(p.id)),pv=prevIds(g);
+ const av=[...free].sort((a,b)=>{const x=pv.indexOf(a.id),y=pv.indexOf(b.id);return(x<0?999:x)-(y<0?999:y)||(+a.no||999)-(+b.no||999)});
+ const cnt={};L.forEach(s=>{if(FPOS.includes(s.pos)||s.pos==='DP'||s.pos==='DH')cnt[s.pos]=(cnt[s.pos]||0)+1;if(s.fp&&s.fpPos)cnt[s.fpPos]=(cnt[s.fpPos]||0)+1});
+ const dup=Object.keys(cnt).filter(k=>cnt[k]>1);
+ h+=(setup?'':`<h2>打順${lk?'(確定済み)':''}</h2>`)+`<div class="card">`+(L.length?L.map((s,i)=>{
+  let r=`<div class="lr" data-i="${i}"><div class="pa"><span>${lk?'':'<span class="grip">≡</span> '}${i+1}番 ${esc(pn(s.pid))}${(s.log||[]).length?' <small class="mute">(交代あり)</small>':''}</span><span><select data-pos="${i}" style="width:auto;padding:6px"${lk&&s.pos!=='代'?' disabled':''}>${opt(POS,s.pos||'')}</select>${lk?'':` ${i?`<button class="g" data-a="up" data-id="${i}">↑</button>`:''}<button class="x" data-a="rml" data-id="${i}">✕</button>`}</span></div>`;
+  if(s.pos==='DP'){
+   if(s.fp)r+=`<div class="pa sb"><span>FP: ${esc(pn(s.fp))}(${esc(s.fpPos||'守備位置なし')}) <small class="mute">守備専門</small></span><span><button class="g" data-a="relfp" data-id="${i}">FP解除</button>${lk?'':`<button class="x" data-a="clrfp" data-id="${i}">✕</button>`}</span></div>`;
+   else if(!lk)r+=`<div class="pa sb"><span>FP(守備専門)</span><span><select data-fps="${i}" style="width:auto;padding:6px">${opt([['','選手'],...free.map(p=>[p.id,p.name])])}</select> <select data-fpp="${i}" style="width:auto;padding:6px">${opt([['','守備'],...FPOS])}</select> <button class="g" data-a="setfp" data-id="${i}">設定</button></span></div>`}
+  return r+'</div>'}).join(''):'<div class="mute">打順が空です。選手を追加してください。</div>');
+ if(dup.length)h+=`<p class="note" style="color:#a33;margin:6px 0 0">守備位置が重複しています: ${esc(dup.join('・'))}</p>`;
+ if(!lk&&L.length>1)h+=`<p class="note" style="margin:6px 0 0">打順の並べ替え: PCは「≡」をドラッグ、スマホは名前の部分を、約0.5秒長押ししてから、上下にドラッグします(↑ボタンでも動かせます)。</p>`;
+ if(!lk)h+=av.length?`<div class="row" style="margin-top:8px"><select id="ladd">${opt(av.map(p=>[p.id,(p.no?p.no+' ':'')+p.name]))}</select><button class="b" data-a="addl" style="flex:0 0 auto">打順に追加</button></div>`:(S.players.length?'':'<p class="note">先に「⚙ 設定」で、選手マスタに選手を登録してください。</p>');
+ if(!setup&&L.length)h+=lk?`<p class="note" style="margin:8px 0 4px">打順は確定しています(誤操作で変わりません)。代打・守備交代は、下の「選手交代」で行えます。</p><button class="g" style="width:100%" data-a="unlockorder">確定を解除して編集する</button>`:`<button class="b" style="width:100%;margin-top:10px" data-a="lockorder">打順を確定する</button><p class="note" style="margin:4px 0 0">確定すると、並べ替えや追加・削除ができなくなります(代打・守備交代は、確定後も使えます)。</p>`;
+ return h+`</div>`}
+function setupV(g,L){return`<h2 style="margin-top:0">試合の準備</h2><p class="note" style="margin:-4px 0 8px">対戦相手・先攻/後攻・打順の3つを決めて、成績入力に進みます。</p>
+<h2>① 対戦相手</h2><div class="card"><input data-su="opp" value="${esc(g.opp||'')}" placeholder="対戦相手のチーム名"></div>
+<h2>② 先攻 / 後攻</h2><div class="card"><div class="row"><button class="${g.bat==='bot'?'g':'b'}" data-a="setbat" data-id="top">先攻(表の攻撃)</button><button class="${g.bat==='bot'?'b':'g'}" data-a="setbat" data-id="bot">後攻(裏の攻撃)</button></div></div>
+<h2>③ 打順を選ぶ</h2>`+lineupV(g,L,true)+`<h2>日付・種別(必要なときだけ変更)</h2><div class="card"><div class="row"><input type="date" data-su="date" value="${esc(g.date||today())}"><select data-su="type">${opt([['practice','練習試合'],['official','公式戦']],g.type==='official'?'official':'practice')}</select></div><div class="row" style="margin-top:8px"><input data-su="tourn" placeholder="大会名(任意)" value="${esc(g.tourn||'')}"></div></div>
+<button class="b" style="width:100%;margin-top:12px" data-a="finsetup">打順を確定して、成績入力へ</button><button class="g" style="width:100%;margin-top:8px;color:#a33" data-a="delg">この試合を削除</button>`}
 function gameV(){
  const g=S.games.find(x=>x.id===S.gid);if(!g){S.gid=null;return gamesV()}
  const L=slotsOf(g),P=S.pas.filter(p=>p.gid===g.id).sort((a,b)=>a.t-b.t),slOf=p=>p.sl||(L.find(s=>slotPids(s).includes(p.pid))||{}).id;
@@ -527,29 +546,16 @@ function gameV(){
  const adm=isAdmin();if(!adm){if(S.sub==='in')S.sub='live';S.pedit=false}
  let h=`<div class="row" style="margin-bottom:6px"><button class="g" data-a="back" style="flex:0 0 auto">← 一覧</button><b style="flex:1">${esc(g.date)} vs ${esc(g.opp||'相手')}</b>${adm?`<button class="g" data-a="editg" style="flex:0 0 auto">✎ 試合情報</button>`:''}</div>
 <div class="tabs">${[['in','入力'],['live','速報'],['paper','成績'],['book','スコアブック'],['pit','投手']].filter(([k])=>adm||k!=='in').map(([k,l])=>`<button data-a="sub" data-id="${k}" class="${S.sub===k?'on':''}">${l}</button>`).join('')}</div>`;
- if(S.sub==='in'){
+ if(S.sub==='in'&&g.setup){h+=setupV(g,L)}
+ else if(S.sub==='in'){
   const I9=[1,2,3,4,5,6,7,8,9];
   h+=`<div class="sw card"><table class="sc"><tr><th></th>${I9.map(i=>`<th>${i}</th>`).join('')}<th>計</th></tr>
 <tr><th>${esc(short(tname())||'自')}</th>${us.map((v,i)=>`<td class="${au[i]?'a':''}"><input type="number" min="0" inputmode="numeric" data-sc="us" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(us)}</b></td></tr>
 <tr><th>${esc(short(g.opp)||'相手')}</th>${th.map((v,i)=>`<td><input type="number" min="0" inputmode="numeric" data-sc="them" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(th)}</b></td></tr></table>
 <div class="note" style="margin-top:6px">得点が1点以上入っている回は、その得点を超える打点・得点者は記録できません。未入力または0点の回は、打点や得点者を記録すると、自動でスコアに加算されます(黄色)。</div></div>`;
 
-  /* 打順 */
-  const inUse=new Set();L.forEach(s=>{inUse.add(s.pid);if(s.fp)inUse.add(s.fp)});
-  const free=S.players.filter(p=>!inUse.has(p.id)),pv=prevIds(g);
-  const av=[...free].sort((a,b)=>{const x=pv.indexOf(a.id),y=pv.indexOf(b.id);return(x<0?999:x)-(y<0?999:y)||(+a.no||999)-(+b.no||999)});
-  const cnt={};L.forEach(s=>{if(FPOS.includes(s.pos)||s.pos==='DP'||s.pos==='DH')cnt[s.pos]=(cnt[s.pos]||0)+1;if(s.fp&&s.fpPos)cnt[s.fpPos]=(cnt[s.fpPos]||0)+1});
-  const dup=Object.keys(cnt).filter(k=>cnt[k]>1);
-  h+=`<h2>打順</h2><div class="card">`+(L.length?L.map((s,i)=>{
-   let r=`<div class="lr" data-i="${i}"><div class="pa"><span><span class="grip">≡</span> ${i+1}番 ${esc(pn(s.pid))}${(s.log||[]).length?' <small class="mute">(交代あり)</small>':''}</span><span><select data-pos="${i}" style="width:auto;padding:6px">${opt(POS,s.pos||'')}</select> ${i?`<button class="g" data-a="up" data-id="${i}">↑</button>`:''}<button class="x" data-a="rml" data-id="${i}">✕</button></span></div>`;
-   if(s.pos==='DP'){
-    if(s.fp)r+=`<div class="pa sb"><span>FP: ${esc(pn(s.fp))}(${esc(s.fpPos||'守備位置なし')}) <small class="mute">守備専門</small></span><span><button class="g" data-a="relfp" data-id="${i}">FP解除</button><button class="x" data-a="clrfp" data-id="${i}">✕</button></span></div>`;
-    else r+=`<div class="pa sb"><span>FP(守備専門)</span><span><select data-fps="${i}" style="width:auto;padding:6px">${opt([['','選手'],...free.map(p=>[p.id,p.name])])}</select> <select data-fpp="${i}" style="width:auto;padding:6px">${opt([['','守備'],...FPOS])}</select> <button class="g" data-a="setfp" data-id="${i}">設定</button></span></div>`}
-   return r+'</div>'}).join(''):'<div class="mute">打順が空です。選手を追加してください。</div>');
-  if(dup.length)h+=`<p class="note" style="color:#a33;margin:6px 0 0">守備位置が重複しています: ${esc(dup.join('・'))}</p>`;
-  if(L.length>1)h+=`<p class="note" style="margin:6px 0 0">打順の並べ替え: PCは「≡」をドラッグ、スマホは名前の部分を長押ししてから、上下にドラッグします(↑ボタンでも動かせます)。</p>`;
-  h+=av.length?`<div class="row" style="margin-top:8px"><select id="ladd">${opt(av.map(p=>[p.id,(p.no?p.no+' ':'')+p.name]))}</select><button class="b" data-a="addl" style="flex:0 0 auto">打順に追加</button></div>`:(S.players.length?'':'<p class="note">先に右上の⚙(設定)で、選手マスタに選手を登録してください。</p>');
-  h+=`</div>`;
+  h+=lineupV(g,L,false);
+  const inUse=new Set();L.forEach(x=>{inUse.add(x.pid);if(x.fp)inUse.add(x.fp)});const free=S.players.filter(p=>!inUse.has(p.id));
 
   /* 選手交代 */
   if(L.length&&free.length){
@@ -690,6 +696,7 @@ function tg(){const r=$('#r');if(r){const no=NOBALL.includes(r.value);$('#d').di
 
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,g=S.games.find(x=>x.id===S.gid);
  if(ADMIN_ACTS.has(a)&&!isAdmin()){alert('この操作は、管理者のみ行えます');return}
+ if(g&&g.locked&&!g.setup&&['addl','rml','up','setfp','clrfp'].includes(a)){alert('打順は確定しています。変更するには、「確定を解除して編集する」を押してください');return}
  if(a==='join'){const v=$('#tin').value.trim();if(!v)return;
   if(!cloud){join(v);return}
   const code=($('#tcode').value||'').trim(),no=($('#tno').value||'').trim();
@@ -767,7 +774,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   put('meta',{...teamM(),id:'team',name:$('#tnm').value.trim(),sport:$('#tsp').value,inn:+$('#tinn').value||7,lineUrl:lu,pub:npub});
   {const nm=$('#tnm').value.trim()||S.team;if(npub>0)setTimeout(()=>S.games.forEach(g=>{delete pubSig[g.id];pubWrite(g,npub,nm)}),1500);else if(opub>0)S.games.forEach(g=>pubDelete(g.id))}}
  else if(a==='tab'){S.help=false;S.page='';S.tab=id;S.gid=null;S.codes=null;if(id==='news')loadPublic();if(id==='sched'){S.evView=null;S.evForm=null}draw()}
- else if(a==='newgame'){const d=$('#gd').value||today(),o={id:uid(),date:d,opp:$('#go').value.trim(),type:$('#gt').value,tourn:$('#gn').value.trim(),season:d.slice(0,4),slots:[],sc:{us:Array(9).fill(null),them:Array(9).fill(null)},auto:Array(9).fill(false),autoT:Array(9).fill(false),dec:{},bat:$('#gbat').value||'top'};put('games',o);S.gid=o.id;S.sub='in';draw()}
+ else if(a==='newgame'){const d=today(),o={id:uid(),date:d,opp:'',type:'practice',tourn:'',season:d.slice(0,4),slots:[],sc:{us:Array(9).fill(null),them:Array(9).fill(null)},auto:Array(9).fill(false),autoT:Array(9).fill(false),dec:{},bat:'top',setup:true};put('games',o);S.gid=o.id;S.sub='in';draw();window.scrollTo(0,0)}
+ else if(a==='setbat'){if(g)put('games',{...g,bat:id})}
+ else if(a==='lockorder'){if(g&&slotsOf(g).length)put('games',{...g,locked:true})}
+ else if(a==='unlockorder'){if(g&&confirm('打順の確定を解除して、編集できるようにしますか?'))put('games',{...g,locked:false})}
+ else if(a==='finsetup'){if(!g)return;const L2=slotsOf(g);if(!L2.length)return alert('打順に、選手を1人以上追加してください');
+  const v=k=>{const el=document.querySelector('[data-su="'+k+'"]');return el?el.value:null},op=v('opp'),dt=v('date'),ty=v('type'),tn=v('tourn');
+  if(!(op!==null?op:g.opp||'').trim()&&!confirm('対戦相手が空欄です。このまま進みますか?'))return;
+  const d2=dt||g.date;put('games',{...g,opp:(op!==null?op:g.opp||'').trim(),date:d2,season:String(d2).slice(0,4),type:ty||g.type,tourn:(tn!==null?tn:g.tourn||'').trim(),setup:false,locked:true});S.sub='in';draw();window.scrollTo(0,0)}
  else if(a==='open'){S.gid=id;S.sub=isAdmin()?'in':'live';draw()}
  else if(a==='back'){S.gid=null;draw()}
  else if(a==='sub'){S.sub=id;S.pre=null;draw()}
@@ -844,7 +858,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  else if(a==='evgame'){const[eid,ks]=id.split(':'),e=S.events.find(x=>x.id===eid),k=+ks||0;if(!e)return;const gs=evGames(e).map(x=>({...x})),gm=gs[k];if(!gm)return;
   if(gm.gid&&S.games.some(x=>x.id===gm.gid)){S.tab='games';S.gid=gm.gid;S.sub=isAdmin()?'in':'live';draw();return}
   if(!isAdmin())return alert('この操作は、管理者のみ行えます');
-  const d=e.date||today(),o={id:uid(),date:d,opp:gm.opp||'',type:e.type==='公式戦'?'official':'practice',tourn:e.tourn||'',season:d.slice(0,4),slots:[],sc:{us:Array(9).fill(null),them:Array(9).fill(null)},auto:Array(9).fill(false),autoT:Array(9).fill(false),dec:{},eid:e.id};
+  const d=e.date||today(),o={id:uid(),date:d,opp:gm.opp||'',type:e.type==='公式戦'?'official':'practice',tourn:e.tourn||'',season:d.slice(0,4),slots:[],sc:{us:Array(9).fill(null),them:Array(9).fill(null)},auto:Array(9).fill(false),autoT:Array(9).fill(false),dec:{},eid:e.id,bat:'top',setup:true};
   gs[k].gid=o.id;put('games',o);put('events',{...e,games:gs,gid:gs[0]?gs[0].gid:''});S.tab='games';S.gid=o.id;S.sub='in';draw()}
  else if(a==='pedit'){S.pedit=!S.pedit;draw()}
  else if(a==='addfor'){S.pre=id;S.edit=null;S.scSel=[];S.sub='in';draw();const bb=$('#b');if(bb)bb.scrollIntoView({behavior:'smooth',block:'center'})}
@@ -884,7 +898,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  else if(a==='delg'){if(confirm('この試合と全ての打席記録を削除します。よろしいですか?')){S.pas.filter(p=>p.gid===g.id).forEach(p=>del('pas',p.id));S.runs.filter(r=>r.gid===g.id).forEach(r=>del('runs',r.id));S.pitch.filter(p=>p.gid===g.id).forEach(p=>del('pitch',p.id));del('games',g.id);S.gid=null;draw()}}
 });
 document.addEventListener('change',e=>{const t=e.target,g=S.games.find(x=>x.id===S.gid);
- if(!isAdmin()&&(t.dataset.sc!==undefined||t.dataset.pos!==undefined||t.dataset.dec!==undefined||t.dataset.plv!==undefined||t.dataset.imp!==undefined)){draw();return}
+ if(!isAdmin()&&(t.dataset.sc!==undefined||t.dataset.pos!==undefined||t.dataset.dec!==undefined||t.dataset.plv!==undefined||t.dataset.imp!==undefined||t.dataset.su!==undefined)){draw();return}
  if(t.dataset.sc&&g){const side=t.dataset.sc,i=+t.dataset.i,sc={us:nrm(g.sc&&g.sc.us),them:nrm(g.sc&&g.sc.them)},au=au9(g),v=t.value===''?null:Math.max(0,Math.floor(+t.value||0));
   if(side==='us'&&v!=null&&v>=1){const u=Math.max(rbiIn(g,i+1),runsIn(g,i+1));if(v<u){alert((i+1)+'回に記録済みの打点・得点者('+u+')より小さい得点にはできません');draw();return}}
   if(side==='them'&&v!=null&&v>=1){const u=pRuns(g,i+1);if(v<u){alert((i+1)+'回に記録済みの失点('+u+')より小さい得点にはできません');draw();return}}
@@ -896,10 +910,12 @@ document.addEventListener('change',e=>{const t=e.target,g=S.games.find(x=>x.id==
   put('games',g2)}
  else if(t.dataset.dec&&g){const d={...(g.dec||{})};if(t.value)d[t.dataset.dec]=t.value;else delete d[t.dataset.dec];put('games',{...g,dec:d})}
  else if(t.dataset.pos!==undefined&&g){const L2=cp(slotsOf(g)),s=L2[+t.dataset.pos];
+  if(g.locked&&s.pos!=='代'){alert('打順は確定しています。守備位置の変更は、「選手交代」「守備位置の入れ替え」を使ってください');draw();return}
   if(s.fp&&t.value!=='DP'){alert('このDPにはFPが設定されています。先にFPを解除してください');draw();return}
   const o=DIRS.includes(t.value)?L2.find(x=>x!==s&&x.pos===t.value):null;
   if(o&&confirm(pn(o.pid)+'さんと、守備位置を入れ替えますか?\n(「キャンセル」を押すと、同じ位置が重複したままになります)')){const old=s.pos;o.pos=old;s.log.push({k:'守備入替',inn:S.inn,from:s.pid,to:s.pid,pos:t.value,other:o.pid,opos:old})}
   s.pos=t.value;saveSlots(g,L2)}
+ else if(t.dataset.su!==undefined&&g){const k=t.dataset.su;put('games',{...g,[k]:t.value,...(k==='date'?{season:String(t.value).slice(0,4)}:{})})}
  else if(t.dataset.plv){const p=S.players.find(x=>x.id===t.dataset.plv);if(p)put('players',{...p,level:t.value})}
  else if(t.dataset.f){S.f[t.dataset.f]=t.value;draw()}
  else if(t.dataset.scs!==undefined){S.scSel[+t.dataset.scs]=t.value}
@@ -911,11 +927,11 @@ document.addEventListener('change',e=>{const t=e.target,g=S.games.find(x=>x.id==
  else if(t.id==='rbi'||t.id==='b')updSc()
  else if(t.id==='ety'){const gt=isGT(t.value),a=$('#egs'),b=$('#etl');if(a)a.hidden=!gt;if(b)b.hidden=gt}
  else if(t.id==='ri')updRun()});
-document.addEventListener('pointerdown',e=>{const row=e.target.closest&&e.target.closest('.lr');if(!row||e.button>0||!isAdmin()||e.target.closest('select,button,input,option'))return;
+document.addEventListener('pointerdown',e=>{const row=e.target.closest&&e.target.closest('.lr');const g0=S.games.find(x=>x.id===S.gid);if(!row||e.button>0||!isAdmin()||!g0||g0.locked||e.target.closest('select,button,input,option'))return;
  drCancel();const isGrip=!!e.target.closest('.grip');
  if(e.pointerType==='mouse'&&!isGrip)return;
  DR={row,i:+row.dataset.i,x0:e.clientX,y0:e.clientY,pid:e.pointerId,type:e.pointerType,active:false,to:+row.dataset.i,timer:null};
- if(e.pointerType!=='mouse'){if(isGrip)drBegin();else DR.timer=setTimeout(drBegin,350)}});
+ if(e.pointerType!=='mouse')DR.timer=setTimeout(drBegin,500)});
 document.addEventListener('pointermove',e=>{if(!DR||e.pointerId!==DR.pid)return;const dx=e.clientX-DR.x0,dy=e.clientY-DR.y0;
  if(!DR.active){if(Math.abs(dx)+Math.abs(dy)>(DR.type==='mouse'?5:10)){if(DR.type==='mouse')drBegin();else{drCancel();return}}else return}
  DR.row.style.transform='translateY('+dy+'px)';
@@ -933,7 +949,7 @@ if(typeof location!=='undefined'&&location.hash==='#help')S.help=true;
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261103234507';
+const APP_VER='20261104050421';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false}}catch(e){}}
