@@ -114,6 +114,7 @@ table.sc{width:100%;table-layout:fixed;border-collapse:collapse}
 <div id="upd" hidden data-a="reload">新しいバージョンがあります。ここをタップして更新してください</div>
 <div id="off" hidden>オフラインです。入力は端末に保存され、電波が戻ると自動で同期されます</div>
 <main id="m"></main>
+<div id="ver" class="note" style="text-align:center;margin:6px 0 0"></div>
 <script src="config.js"></script>
 <script>
 /* ===== Firebase設定は config.js に書きます(このファイルは編集不要)。空だとこの端末だけで動作します ===== */
@@ -972,10 +973,11 @@ if(typeof location!=='undefined'&&location.hash==='#help')S.help=true;
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261104050421';
+const APP_VER='20261109172117';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false;const rf=$('#rf');if(rf){rf.classList.add('new');rf.textContent='🔄 最新版に更新'}}return m?m[1]:''}catch(e){}}
+{const e=document.getElementById('ver');if(e)e.textContent='版 '+APP_VER}
 async function hardReload(){const rf=$('#rf');if(rf)rf.textContent='更新中…';
  try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}
   if(typeof caches!=='undefined'){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){}
