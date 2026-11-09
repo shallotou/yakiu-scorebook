@@ -573,9 +573,7 @@ function gameV(){
  if(S.sub==='in'&&g.setup){h+=setupV(g,L)}
  else if(S.sub==='in'){
   const I9=[1,2,3,4,5,6,7,8,9];
-  h+=`<div class="sw card"><table class="sc"><tr><th></th>${I9.map(i=>`<th>${i}</th>`).join('')}<th>計</th></tr>
-<tr><th class="nm">${esc(short(tname())||'自')}</th>${us.map((v,i)=>`<td class="${au[i]?'a':''}"><input type="number" min="0" inputmode="numeric" data-sc="us" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(us)}</b></td></tr>
-<tr><th class="nm">${esc(short(g.opp)||'相手')}</th>${th.map((v,i)=>`<td><input type="number" min="0" inputmode="numeric" data-sc="them" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(th)}</b></td></tr></table>
+  h+=`<div class="sw card"><table class="sc"><tr><th></th>${I9.map(i=>`<th>${i}</th>`).join('')}<th>計</th></tr>${(()=>{const rU=`<tr><th class="nm">${esc(short(tname())||'自')}</th>${us.map((v,i)=>`<td class="${au[i]?'a':''}"><input type="number" min="0" inputmode="numeric" data-sc="us" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(us)}</b></td></tr>`,rT=`<tr><th class="nm">${esc(short(g.opp)||'相手')}</th>${th.map((v,i)=>`<td><input type="number" min="0" inputmode="numeric" data-sc="them" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(th)}</b></td></tr>`;return g.bat==='bot'?rT+rU:rU+rT})()}</table>
 <div class="row" style="margin-top:8px;align-items:center"><span class="note" style="flex:1;min-width:0">自チーム: <b>${g.bat==='bot'?'後攻':'先攻'}</b></span><button class="g" data-a="togbat" style="flex:0 0 auto">⇄ 先攻と後攻を入れ替え</button></div>
 <div class="note" style="margin-top:6px">得点が1点以上入っている回は、その得点を超える打点・得点者は記録できません。未入力または0点の回は、打点や得点者を記録すると、自動でスコアに加算されます(黄色)。</div></div>`;
 
