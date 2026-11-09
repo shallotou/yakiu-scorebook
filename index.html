@@ -96,8 +96,12 @@ header b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btng button.x{border:1px solid var(--line);border-radius:6px;color:#a33}
 details.un{margin-top:2px;font-size:13px;color:#a33}
 details.un summary{cursor:pointer;font-weight:700}
+header #ttl{flex:1;min-width:0}
+#rf{flex:0 0 auto;margin-left:8px;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:14px;padding:4px 10px;font:700 13px system-ui,sans-serif}
+#rf.new{background:#e6dc2e;color:#17241d;border-color:#e6dc2e}
+#upd{position:sticky;top:0;z-index:50}
 </style></head><body>
-<div id="top"><header><b id="ttl"></b></header>
+<div id="top"><header><b id="ttl"></b><button id="rf" data-a="reload" title="最新版に更新">🔄 更新</button></header>
 <nav id="nv" hidden><button data-a="tab" data-id="sched">予定</button><button data-a="tab" data-id="games">試合</button><button data-a="tab" data-id="stats">集計</button><button data-a="tab" data-id="news">ニュース</button><button data-a="tab" data-id="settings">⚙ 設定</button></nav></div>
 <div id="upd" hidden data-a="reload">新しいバージョンがあります。ここをタップして更新してください</div>
 <div id="off" hidden>オフラインです。入力は端末に保存され、電波が戻ると自動で同期されます</div>
@@ -717,7 +721,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   const ad=($('#tadm').value||'').trim(),doc={code,no,playerId:'',joinedAt:Date.now(),...(ad?{adminCode:ad}:{})};
   col(v,'members').doc(S.uid).set(doc).then(()=>{LS['mem:'+v+':'+S.uid]='1';S.me=doc;S.msg='';join(v)})
    .catch(e=>{alert(e&&e.code==='permission-denied'?'チームIDまたは合言葉が違います':'接続できません。インターネットの接続を確認してください');draw()})}
- else if(a==='reload'){location.reload()}
+ else if(a==='reload'){hardReload()}
  else if(a==='claimadmin'){const c=($('#cadm').value||'').trim();if(!c)return;
   const p=S.players.find(x=>String(x.no)===String((S.me||{}).no));
   if(!p)return alert('あなたの背番号の選手が、選手マスタにありません');
@@ -964,7 +968,11 @@ if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout
 const APP_VER='20261104050421';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
- if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false}}catch(e){}}
+ if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false;const rf=$('#rf');if(rf){rf.classList.add('new');rf.textContent='🔄 最新版に更新'}}return m?m[1]:''}catch(e){}}
+async function hardReload(){const rf=$('#rf');if(rf)rf.textContent='更新中…';
+ try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}
+  if(typeof caches!=='undefined'){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){}
+ location.replace(location.pathname+'?_='+Date.now()+(location.hash||''))}
 function boot(){
  if(!cloud){if(S.team)join(S.team);else draw();return}
  draw();const au=firebase.auth();
