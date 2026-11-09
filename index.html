@@ -576,6 +576,7 @@ function gameV(){
   h+=`<div class="sw card"><table class="sc"><tr><th></th>${I9.map(i=>`<th>${i}</th>`).join('')}<th>計</th></tr>
 <tr><th class="nm">${esc(short(tname())||'自')}</th>${us.map((v,i)=>`<td class="${au[i]?'a':''}"><input type="number" min="0" inputmode="numeric" data-sc="us" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(us)}</b></td></tr>
 <tr><th class="nm">${esc(short(g.opp)||'相手')}</th>${th.map((v,i)=>`<td><input type="number" min="0" inputmode="numeric" data-sc="them" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(th)}</b></td></tr></table>
+<div class="row" style="margin-top:8px;align-items:center"><span class="note" style="flex:1;min-width:0">自チーム: <b>${g.bat==='bot'?'後攻':'先攻'}</b></span><button class="g" data-a="togbat" style="flex:0 0 auto">⇄ 先攻と後攻を入れ替え</button></div>
 <div class="note" style="margin-top:6px">得点が1点以上入っている回は、その得点を超える打点・得点者は記録できません。未入力または0点の回は、打点や得点者を記録すると、自動でスコアに加算されます(黄色)。</div></div>`;
 
   h+=lineupV(g,L,false);
@@ -776,7 +777,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  else if(a==='chgadm'){const c=(prompt('新しい管理者用の合言葉(6文字以上)')||'').trim();if(c.length<6)return alert('6文字以上にしてください');
   fdb.collection('teams').doc(S.team).update({adminCode:c}).then(()=>{S.me={...S.me,adminCode:c};col(S.team,'members').doc(S.uid).set(S.me).catch(()=>{});alert('管理者用の合言葉を変更しました')}).catch(()=>alert('変更できませんでした(オーナーのみ変更できます)'))}
  else if(a==='lv'){S.lv=id;draw()}
- else if(a==='togbat'){if(g)put('games',{...g,bat:g.bat==='bot'?'top':'bot'})}
+ else if(a==='togbat'){if(g){const nb=g.bat==='bot'?'top':'bot';if(confirm('自チームを'+(nb==='bot'?'後攻':'先攻')+'に入れ替えますか?\n(入力済みの打席や得点は、そのまま残ります)'))put('games',{...g,bat:nb})}}
  else if(a==='bk'){S.bk=id;draw()}
  else if(a==='lmode'){S.lmode=id;S.msg='';draw()}
  else if(a==='mkteam'){const v=$('#tin').value.trim(),code=($('#tcode').value||'').trim(),cc=($('#tcc').value||'').trim(),nm=($('#tnm2').value||'').trim(),no=($('#tno').value||'').trim(),sp=$('#tsp2').value,ii=+$('#tinn2').value||7,ad2=($('#tadm2').value||'').trim();
