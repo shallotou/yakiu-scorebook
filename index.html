@@ -100,6 +100,14 @@ header #ttl{flex:1;min-width:0}
 #rf{flex:0 0 auto;margin-left:8px;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:14px;padding:4px 10px;font:700 13px system-ui,sans-serif}
 #rf.new{background:#e6dc2e;color:#17241d;border-color:#e6dc2e}
 #upd{position:sticky;top:0;z-index:50}
+.sw:has(.sc){overflow-x:visible}
+table.sc{width:100%;table-layout:fixed;border-collapse:collapse}
+.sc th,.sc td{padding:2px 1px;text-align:center}
+.sc th.nm{font-size:13px;white-space:normal;word-break:break-all;line-height:1.2;text-align:left;padding:2px 3px;width:3.9em}
+.sc tr>*:first-child{width:50px}
+.sc tr>*:last-child{width:30px}
+.sc td input{min-width:0;width:100%;text-align:center;box-sizing:border-box;padding:6px 0;font-size:15px;-moz-appearance:textfield}
+.sc td input::-webkit-outer-spin-button,.sc td input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 </style></head><body>
 <div id="top"><header><b id="ttl"></b><button id="rf" data-a="reload" title="最新版に更新">🔄 更新</button></header>
 <nav id="nv" hidden><button data-a="tab" data-id="sched">予定</button><button data-a="tab" data-id="games">試合</button><button data-a="tab" data-id="stats">集計</button><button data-a="tab" data-id="news">ニュース</button><button data-a="tab" data-id="settings">⚙ 設定</button></nav></div>
@@ -137,7 +145,7 @@ const isOut=r=>['out','進','犠打','犠飛','振','併殺'].includes(r);
 const outN=r=>r==='併殺'?2:isOut(r)?1:0;
 const RK=[['得点','得点'],['盗塁','盗塁'],['盗塁死','盗塁死(アウト)'],['走塁死','走塁死(アウト)'],['暴投','進塁(暴投)'],['捕逸','進塁(捕逸)']],RS={封殺:'封',併殺走者:'併',得点:'得',盗塁:'盗',盗塁死:'盗死',走塁死:'走死',暴投:'暴',捕逸:'捕'},RLAB={封殺:'封殺(走者アウト)',併殺走者:'併殺(走者アウト)',得点:'得点',盗塁:'盗塁',盗塁死:'盗塁死',走塁死:'走塁死',暴投:'進塁(暴投)',捕逸:'進塁(捕逸)'};
 const runLab=r=>RLAB[r.k]+(r.k==='封殺'&&r.b?' '+(r.b==='H'?'本塁':r.b+'塁'):'');
-const short=t=>[...String(t||'')].slice(0,3).join('');
+const short=t=>[...String(t||'')].slice(0,6).join('');
 const POS=[['','守備'],...DIRS,'DP','DH',['代','代打'],'控'];
 const S={team:LS.team||'',uid:'',me:null,ready:!cloud,msg:'',lmode:'join',guideOpen:false,bk:'news',dpSel:'',foBase:'',got:{},linkFail:'',meta:[],players:[],games:[],pas:[],runs:[],pitch:[],pedit:false,pre:null,pe:null,scSel:[],events:[],att:[],evForm:null,evOpen:null,showPast:false,evView:null,pastN:10,lv:'new',codes:null,email:'',emailVerified:false,help:false,page:'',nv:'news',news:[],fb:[],pubs:[],siteAdmins:[],pubAt:0,fbText:'',openPub:'',impOpen:false,imp:null,impText:'',appName:'',tab:'sched',gid:null,sub:'in',inn:1,edit:null,f:{season:'',tourn:'',type:''}};
 let unsubs=[];
@@ -566,8 +574,8 @@ function gameV(){
  else if(S.sub==='in'){
   const I9=[1,2,3,4,5,6,7,8,9];
   h+=`<div class="sw card"><table class="sc"><tr><th></th>${I9.map(i=>`<th>${i}</th>`).join('')}<th>計</th></tr>
-<tr><th>${esc(short(tname())||'自')}</th>${us.map((v,i)=>`<td class="${au[i]?'a':''}"><input type="number" min="0" inputmode="numeric" data-sc="us" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(us)}</b></td></tr>
-<tr><th>${esc(short(g.opp)||'相手')}</th>${th.map((v,i)=>`<td><input type="number" min="0" inputmode="numeric" data-sc="them" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(th)}</b></td></tr></table>
+<tr><th class="nm">${esc(short(tname())||'自')}</th>${us.map((v,i)=>`<td class="${au[i]?'a':''}"><input type="number" min="0" inputmode="numeric" data-sc="us" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(us)}</b></td></tr>
+<tr><th class="nm">${esc(short(g.opp)||'相手')}</th>${th.map((v,i)=>`<td><input type="number" min="0" inputmode="numeric" data-sc="them" data-i="${i}" value="${v??''}"></td>`).join('')}<td><b>${sum(th)}</b></td></tr></table>
 <div class="note" style="margin-top:6px">得点が1点以上入っている回は、その得点を超える打点・得点者は記録できません。未入力または0点の回は、打点や得点者を記録すると、自動でスコアに加算されます(黄色)。</div></div>`;
 
   h+=lineupV(g,L,false);
