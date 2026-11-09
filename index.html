@@ -108,6 +108,7 @@ table.sc{width:100%;table-layout:fixed;border-collapse:collapse}
 .sc tr>*:last-child{width:30px}
 .sc td input{min-width:0;width:100%;text-align:center;box-sizing:border-box;padding:6px 0;font-size:15px;-moz-appearance:textfield}
 .sc td input::-webkit-outer-spin-button,.sc td input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.tpl{white-space:pre-wrap;user-select:text;-webkit-user-select:text;background:#f6f9f6;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;margin:2px 0 6px}
 </style></head><body>
 <div id="top"><header><b id="ttl"></b><button id="rf" data-a="reload" title="最新版に更新">🔄 更新</button></header>
 <nav id="nv" hidden><button data-a="tab" data-id="sched">予定</button><button data-a="tab" data-id="games">試合</button><button data-a="tab" data-id="stats">集計</button><button data-a="tab" data-id="news">ニュース</button><button data-a="tab" data-id="settings">⚙ 設定</button></nav></div>
@@ -382,6 +383,19 @@ function helpV(){return`<div class="row" style="margin-bottom:8px;flex-wrap:nowr
 <div class="hh">1. 代表者(オーナー)が最初にやること</div><ol><li>アプリのURLを開き、「チームを新規追加する」を押します。</li><li>チーム名・競技・イニング数・チームID・合言葉・管理者用の合言葉・自分の背番号を入力して、「チームを作成して参加」を押します(「チーム作成コード」は、通常は空欄です)。</li><li>「⚙ 設定」を開き、選手マスタに選手を登録します(名前・背番号・ポジション)。他のサイトの選手一覧があれば、「貼り付けて、まとめて登録する」が使えます。</li><li>自分も選手として登録し、「操作レベル」を「管理者」にします(端末を替えても、背番号と管理者用の合言葉で戻れます)。</li><li>設定の「オーナーのアカウント保護」で、メールアドレスとパスワードを登録します(端末をなくしたとき、ログイン画面の「オーナーの方はこちら」から戻れます)。</li><li>メンバーに、アプリのURL・チームID・合言葉を伝えます。管理者用の合言葉は、管理者にだけ伝えます。</li></ol>
 <div class="hh">2. メンバーが最初にやること</div><ol><li>伝えられたURLを開きます(ホーム画面に追加しておくと便利です)。</li><li>チームID・合言葉・背番号を入力して、「参加する」を押します。この端末では、最初の1回だけです。</li><li>背番号が選手マスタにあれば、自分の出欠を入力できます。ない場合は、管理者に、登録を頼んでください。</li></ol>
 <div class="hh">3. 管理者を増やす</div><ol><li>選手マスタで、その人の「操作レベル」を「管理者」にします。</li><li>その人に、管理者用の合言葉を伝えます。</li><li>その人が、「⚙ 設定」の「この端末の権限」に、管理者用の合言葉を入力して、「認証」を押します(参加するときに、「管理者用の合言葉」の欄に入れても構いません)。</li></ol><div class="note">すでにあるチームで、管理者機能をまだ有効にしていない場合は、設定の「この端末の権限」から、有効にできます(最初に押した人が、オーナーになります)。</div>
+<div class="hh">メンバー・管理者への案内文(例)</div><div class="note">長押しして、コピーしてお使いください。「○○」の部分は、チームの内容に書き換えます。</div>
+<div class="note" style="margin-top:6px"><b>① メンバー全員への案内</b></div><div class="tpl">【成績・予定アプリのご案内】
+アプリ: https://shallotou.github.io/yakiu-scorebook/
+チームID: ○○○○
+合言葉: ○○○○
+1. 上のURLを開きます(ホーム画面に追加すると、アプリのように使えます)
+2. チームID・合言葉・自分の背番号を入力して「参加する」
+3. 予定のページで、○△×の出欠を入力してください</div>
+<div class="note" style="margin-top:6px"><b>② 管理者への案内(管理者にだけ、個別に送ります)</b></div><div class="tpl">管理者をお願いします。
+管理者用の合言葉: ○○○○
+・初めて入るとき: 「管理者用の合言葉」の欄に、上の合言葉を入力してください
+・すでに参加済みの端末: 「⚙ 設定」→「この端末の権限」に入力して「認証」
+※この合言葉は、他の人に教えないでください。端末を替えたときは、もう一度入力が必要です。</div>
 <div class="hh">4. 一般と管理者の違い</div><ul><li><b>一般</b>: 予定・試合・成績・集計を見る。自分の出欠を入力する。</li><li><b>管理者</b>: 上に加えて、予定・試合・成績・選手マスタ・チームマスタの編集。他の人の出欠の代理入力。</li></ul>
 <div class="hh">5. ふだんの使い方</div><ul><li><b>予定と出欠</b>: 「予定」タブ →「＋予定を追加」(管理者)。メンバーは、予定をタップして、○参加 / △未定 / ×不参加を選びます。「LINEで共有」「内容をコピー」で、グループLINEに連絡できます。</li><li><b>試合を記録する(管理者)</b>: 「試合」タブの「＋試合を作成」(または、予定の「試合を作成」)を押し、①対戦相手 ②先攻/後攻 ③打順を決めて、「打順を確定して、成績入力へ」を押します。そのあと、「入力」タブで、①打席を入力 ②走塁・得点を入力 ③「投手」タブで、回ごとの投手成績を入力します。得点は、未入力でも構いません(打点を入れると、自動で加算されます)。</li><li><b>打順の並べ替え</b>: PCは「≡」をドラッグします。スマホは、選手の名前の部分を、約0.5秒長押ししてから、上下にドラッグします(触れただけでは動きません)。「打順を確定」すると、並べ替えや追加・削除ができなくなります。「確定を解除して編集する」で戻せます。代打・守備交代は、確定後も使えます。</li><li><b>代打・守備交代</b>: 「選手交代」「守備位置の入れ替え」で行います。間違えたときは、「交代の履歴」の「取消」を押します。</li><li><b>間違えたとき</b>: 「入力済み」の「✎」で直し、「✕」で消します。</li><li><b>見る</b>: 試合の「速報」「成績」「スコアブック」と、「集計」タブ。</li></ul>
 <div class="hh">6. ニュースとご要望・試合結果の公開</div><ul><li><b>ニュース</b>: 運営からのお知らせと、他のチームの試合結果の更新が出ます(「ニュース」タブ)。</li><li><b>ご要望</b>: 改善してほしい点を、匿名で投稿できます。投稿は、すべての利用者に公開されます。</li><li><b>試合結果の公開(管理者)</b>: 「⚙ 設定」のチームマスタで、「公開しない」「試合結果のみ」「イニングスコアまで」を選べます。選手名と個人成績は、公開されません。初期設定は、公開しない です。</li></ul>
@@ -973,7 +987,7 @@ if(typeof location!=='undefined'&&location.hash==='#help')S.help=true;
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261109172117';
+const APP_VER='20261109173125';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false;const rf=$('#rf');if(rf){rf.classList.add('new');rf.textContent='🔄 最新版に更新'}}return m?m[1]:''}catch(e){}}
