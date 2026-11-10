@@ -109,9 +109,18 @@ table.sc{width:100%;table-layout:fixed;border-collapse:collapse}
 .sc td input{min-width:0;width:100%;text-align:center;box-sizing:border-box;padding:6px 0;font-size:15px;-moz-appearance:textfield}
 .sc td input::-webkit-outer-spin-button,.sc td input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .tpl{white-space:pre-wrap;user-select:text;-webkit-user-select:text;background:#f6f9f6;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;margin:2px 0 6px}
+.pa .ar.c2{grid-template-columns:54px 44px}
+.pa .ar.c2 .ab.sm{width:auto;max-width:none;font-size:13px}
+.pa small{font-size:12px}
+.at{padding:8px 0;border-bottom:1px solid var(--line)}
+.at:last-child{border-bottom:0}
+.bar{height:7px;background:#e3eae5;border-radius:4px;overflow:hidden;margin:4px 0}
+.bar i{display:block;height:100%;background:#2e7d32}
+.fi{cursor:pointer}
+nav button{font-size:13px;white-space:nowrap;padding:14px 0}
 </style></head><body>
 <div id="top"><header><b id="ttl"></b><button id="rf" data-a="reload" title="最新版に更新">🔄 更新</button></header>
-<nav id="nv" hidden><button data-a="tab" data-id="sched">予定</button><button data-a="tab" data-id="games">試合</button><button data-a="tab" data-id="stats">集計</button><button data-a="tab" data-id="news">ニュース</button><button data-a="tab" data-id="settings">⚙ 設定</button></nav></div>
+<nav id="nv" hidden><button data-a="tab" data-id="sched">予定</button><button data-a="tab" data-id="games">試合</button><button data-a="tab" data-id="stats">集計</button><button data-a="tab" data-id="fees">部費</button><button data-a="tab" data-id="news">ニュース</button><button data-a="tab" data-id="settings">⚙ 設定</button></nav></div>
 <div id="upd" hidden data-a="reload">新しいバージョンがあります。ここをタップして更新してください</div>
 <div id="off" hidden>オフラインです。入力は端末に保存され、電波が戻ると自動で同期されます</div>
 <main id="m"></main>
@@ -150,7 +159,7 @@ const runLab=r=>RLAB[r.k]+(r.k==='封殺'&&r.b?' '+(r.b==='H'?'本塁':r.b+'塁'
 const short=t=>[...String(t||'')].slice(0,6).join('');
 const POS=[['','守備'],...DIRS,'DP','DH',['代','代打'],'控'];
 const S={team:LS.team||'',uid:'',me:null,ready:!cloud,msg:'',lmode:'join',guideOpen:false,bk:'news',dpSel:'',foBase:'',got:{},linkFail:'',meta:[],players:[],games:[],pas:[],runs:[],pitch:[],pedit:false,pre:null,pe:null,scSel:[],events:[],att:[],evForm:null,evOpen:null,showPast:false,evView:null,pastN:10,lv:'new',codes:null,email:'',emailVerified:false,help:false,page:'',nv:'news',news:[],fb:[],pubs:[],siteAdmins:[],pubAt:0,fbText:'',openPub:'',impOpen:false,imp:null,impText:'',appName:'',tab:'sched',gid:null,sub:'in',inn:1,edit:null,f:{season:'',tourn:'',type:''}};
-let unsubs=[];
+let unsubs=[];Object.assign(S,{fees:[],pay:[],stv:'bat',af:{per:'fy',ty:''},fv:{tab:'item',id:'',per:'',pid:''},feeForm:null,feeTpl:null,feeErr:false});let payU=null,payKey='',PM=new Map();
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const opt=(a,sel)=>a.map(x=>{const[v,l]=Array.isArray(x)?x:[x,x];return`<option value="${esc(v)}"${v==sel?' selected':''}>${esc(l)}</option>`}).join('');
@@ -162,15 +171,15 @@ const eraN=()=>+teamM().inn||(teamM().sport==='base'?9:7);
 const rolesOn=()=>!!teamM().roles;
 const myPlayer=()=>S.players.find(p=>S.me&&p.id===S.me.playerId);
 const isAdmin=()=>{if(!cloud)return true;if(!(S.got.meta&&S.got.players))return false;return !rolesOn()||!!(S.me&&S.me.owner)||!!(myPlayer()&&myPlayer().level==='admin')};
-const ADMIN_ACTS=new Set(['newgame','setbat','lockorder','unlockorder','finsetup','addp','delp','editp','savet','addl','rml','up','dosub','doswap','undolog','togbat','showcodes','chgjoin','impopen','impcancel','imparse','impsave','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','evlineun','pedit','addfor']);
+const ADMIN_ACTS=new Set(['newgame','setbat','lockorder','unlockorder','finsetup','addp','delp','editp','savet','addl','rml','up','dosub','doswap','undolog','togbat','showcodes','chgjoin','impopen','impcancel','imparse','impsave','setfp','clrfp','relfp','addpa','delpa','editpa','canpa','addrun','delrun','addpit','editpit','delpit','canpit','editg','delg','evnew','evedit','evcancel','evsave','evdel','evcopy','evlineun','pedit','addfor','feenew','feeedit','feedup','feesave','feedel','feeview','feepl','paytog','paywv','feecopy','feeline']);
 const pn=id=>(S.players.find(p=>p.id===id)||{name:'(削除済)'}).name;
 const fmt=x=>x.toFixed(3).replace(/^0/,'');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-function join(t){unsubs.forEach(u=>u());S.team=t;LS.team=t;S.meta=[];S.players=[];S.games=[];S.pas=[];S.runs=[];S.pitch=[];S.events=[];S.att=[];S.got={};
- unsubs=['meta','players','games','pas','runs','pitch','events','att'].map(c=>sub(t,c,a=>{S[c]=a;S.got[c]=true;if(c==='players')linkMe();draw()}));draw()}
+function join(t){unsubs.forEach(u=>u());S.team=t;LS.team=t;S.meta=[];S.players=[];S.games=[];S.pas=[];S.runs=[];S.pitch=[];S.events=[];S.att=[];S.fees=[];S.pay=[];S.got={};if(payU){payU();payU=null}payKey='';
+ unsubs=['meta','players','games','pas','runs','pitch','events','att','fees'].map(c=>sub(t,c,a=>{S[c]=a;S.got[c]=true;if(c==='players')linkMe();draw()}));draw()}
 function linkMe(){if(!cloud||!S.me||!S.me.no||S.me.playerId||!S.uid)return;const p=S.players.find(x=>String(x.no)===String(S.me.no));if(!p)return;
  const key=p.id+':'+(S.me.adminCode||'');if(S.linkFail===key)return;
- const nm={...S.me,playerId:p.id};col(S.team,'members').doc(S.uid).set(nm).then(()=>{S.me=nm;S.linkFail='';draw()}).catch(()=>{S.linkFail=key;draw()})}
+ const nm={...S.me,playerId:p.id};col(S.team,'members').doc(S.uid).set(nm).then(()=>{S.me=nm;S.linkFail='';ensurePay();draw()}).catch(()=>{S.linkFail=key;draw()})}
 
 /* ---- スコア(未入力=null)と自動加算 ---- */
 const ent=v=>v!=null&&v!=='';
@@ -398,8 +407,9 @@ function helpV(){return`<div class="row" style="margin-bottom:8px;flex-wrap:nowr
 ※この合言葉は、他の人に教えないでください。端末を替えたときは、もう一度入力が必要です。</div>
 <div class="hh">4. 一般と管理者の違い</div><ul><li><b>一般</b>: 予定・試合・成績・集計を見る。自分の出欠を入力する。</li><li><b>管理者</b>: 上に加えて、予定・試合・成績・選手マスタ・チームマスタの編集。他の人の出欠の代理入力。</li></ul>
 <div class="hh">5. ふだんの使い方</div><ul><li><b>予定と出欠</b>: 「予定」タブ →「＋予定を追加」(管理者)。メンバーは、予定をタップして、○参加 / △未定 / ×不参加を選びます。「LINEで共有」「内容をコピー」で、グループLINEに連絡できます。</li><li><b>試合を記録する(管理者)</b>: 「試合」タブの「＋試合を作成」(または、予定の「試合を作成」)を押し、①対戦相手 ②先攻/後攻 ③打順を決めて、「打順を確定して、成績入力へ」を押します。そのあと、「入力」タブで、①打席を入力 ②走塁・得点を入力 ③「投手」タブで、回ごとの投手成績を入力します。得点は、未入力でも構いません(打点を入れると、自動で加算されます)。</li><li><b>打順の並べ替え</b>: PCは「≡」をドラッグします。スマホは、選手の名前の部分を、約0.5秒長押ししてから、上下にドラッグします(触れただけでは動きません)。「打順を確定」すると、並べ替えや追加・削除ができなくなります。「確定を解除して編集する」で戻せます。代打・守備交代は、確定後も使えます。</li><li><b>代打・守備交代</b>: 「選手交代」「守備位置の入れ替え」で行います。間違えたときは、「交代の履歴」の「取消」を押します。</li><li><b>間違えたとき</b>: 「入力済み」の「✎」で直し、「✕」で消します。</li><li><b>見る</b>: 試合の「速報」「成績」「スコアブック」と、「集計」タブ。</li></ul>
-<div class="hh">6. ニュースとご要望・試合結果の公開</div><ul><li><b>ニュース</b>: 運営からのお知らせと、他のチームの試合結果の更新が出ます(「ニュース」タブ)。</li><li><b>ご要望</b>: 改善してほしい点を、匿名で投稿できます。投稿は、すべての利用者に公開されます。</li><li><b>試合結果の公開(管理者)</b>: 「⚙ 設定」のチームマスタで、「公開しない」「試合結果のみ」「イニングスコアまで」を選べます。選手名と個人成績は、公開されません。初期設定は、公開しない です。</li></ul>
-<div class="hh">7. 困ったとき</div><ul><li><b>合言葉を忘れた</b>: 管理者が、「⚙ 設定」の「合言葉の確認・変更」で、確認できます。</li><li><b>端末をなくした(オーナー)</b>: ログイン画面の「オーナーの方はこちら」から、メールでログインします。</li><li><b>画面が古い</b>: 画面の上に青い帯が出たら、タップして更新します。</li><li><b>ホーム画面に追加したい</b>: 「ホーム画面への追加方法」を見てください(ログイン画面・予定・設定の下にあります)。</li></ul>
+<div class="hh">6. 出席率と部費</div><ul><li><b>出席率</b>: 「集計」タブの「出席率」で、選手ごとの出席率を見られます。出席率 = ○(参加)の回数 ÷ 過去の予定の数です。期間(今年度・今年・直近3か月・全期間)と、予定の種類(試合・練習など)で絞れます。</li><li><b>部費(管理者)</b>: 「部費」タブの「＋ 項目を追加」で、月会費(月払い)・年会費(年払い)・遠征費やユニフォーム代(都度払い)を登録します。項目を開き、納入した人の「納入済」を押すと記録されます(もう一度押すと取り消し)。事情があって払わない人は「免除」にします。「連絡文をコピー」「未納者へLINE」で、未納者へ連絡できます。「選手別」では、人ごとの未納を確認できます。</li><li><b>部費(一般)</b>: 「部費」タブに、自分の未納・納入済みだけが表示されます。他の人の分は見られません。</li></ul>
+<div class="hh">7. ニュースとご要望・試合結果の公開</div><ul><li><b>ニュース</b>: 運営からのお知らせと、他のチームの試合結果の更新が出ます(「ニュース」タブ)。</li><li><b>ご要望</b>: 改善してほしい点を、匿名で投稿できます。投稿は、すべての利用者に公開されます。</li><li><b>試合結果の公開(管理者)</b>: 「⚙ 設定」のチームマスタで、「公開しない」「試合結果のみ」「イニングスコアまで」を選べます。選手名と個人成績は、公開されません。初期設定は、公開しない です。</li></ul>
+<div class="hh">8. 困ったとき</div><ul><li><b>合言葉を忘れた</b>: 管理者が、「⚙ 設定」の「合言葉の確認・変更」で、確認できます。</li><li><b>端末をなくした(オーナー)</b>: ログイン画面の「オーナーの方はこちら」から、メールでログインします。</li><li><b>画面が古い</b>: 画面の上に青い帯が出たら、タップして更新します。</li><li><b>ホーム画面に追加したい</b>: 「ホーム画面への追加方法」を見てください(ログイン画面・予定・設定の下にあります)。</li></ul>
 ${S.team?'':`<button class="g" style="width:100%;margin-top:10px" data-a="helpback">← トップページ(ログイン画面)に戻る</button>`}
 <div class="note" style="margin-top:12px">この使い方のURL(メンバーに送れます): <b>${esc(appUrl())}#help</b> <button class="g" data-a="helpurl" style="min-width:0;padding:4px 10px">コピー</button></div>${cloud&&S.uid?`<div class="note" style="margin-top:8px">(アプリの運営者向け) この端末のユーザーID: <b>${esc(S.uid)}</b> <button class="g" data-a="copyuid" style="min-width:0;padding:4px 10px">コピー</button></div>`:''}
 </div>`}
@@ -696,7 +706,111 @@ function statsBat(){
  `<tr class="t"><td class="l">チーム</td><td>${gs.length}</td><td>${t.pa}</td><td>${t.ab}</td><td>${t.h}</td><td>${t.hr}</td><td>${t.rbi}</td><td>${tr.run}</td><td>${tr.sb}</td><td>${tr.cs}</td><td>${tr.ro}</td><td>${t.bb}</td><td>${t.hbp}</td><td>${t.so}</td><td>${t.gdp}</td><td>${fmt(t.avg)}</td><td>${fmt(t.obp)}</td><td>${fmt(t.slg)}</td><td>${fmt(t.ops)}</td></tr></table></div>`:'<div class="empty">この条件に該当する打席がありません。</div>')+
  `<p class="note">打率=安打÷打数、出塁=(安打+四球+死球)÷(打数+四球+死球+犠飛)、長打=塁打÷打数。犠打・四球・死球は打数に含みません。盗死=盗塁死、走死=走塁死。</p>`}
 
-function statsV(){return statsBat()+pitV()}
+/* ===== 出席率 ===== */
+const yen=n=>'¥'+Math.round(+n||0).toLocaleString('ja-JP');
+const fyOf=d=>{const y=+d.slice(0,4),m=+d.slice(5,7);return m>=4?y:y-1};
+function attRange(){const td=today(),p=S.af.per;
+ if(p==='all')return['',td];
+ if(p==='fy')return[fyOf(td)+'-04-01',td];
+ if(p==='y')return[td.slice(0,4)+'-01-01',td];
+ const d=new Date();d.setMonth(d.getMonth()-3);return[d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),td]}
+function attV(){
+ const[from,td]=attRange(),ty=S.af.ty,my=myPid();
+ const evs=S.events.filter(e=>{const d=e.date||'';if(d>=td||d<from)return false;const t=e.type||'';return !ty||(ty==='game'?(t==='公式戦'||t==='練習試合'):t===ty)});
+ const ids=new Set(evs.map(e=>e.id));
+ const rows=S.players.map(p=>{let y=0,m=0,n=0;S.att.forEach(a=>{if(a.pid!==p.id||!ids.has(a.eid))return;if(a.v==='○')y++;else if(a.v==='△')m++;else if(a.v==='×')n++});return{p,y,m,n,un:evs.length-y-m-n,r:evs.length?y/evs.length:0}})
+  .sort((a,b)=>b.r-a.r||(+a.p.no||999)-(+b.p.no||999));
+ const avg=rows.length&&evs.length?rows.reduce((s,x)=>s+x.r,0)/rows.length:0;
+ return`<h2 style="margin-top:0">出席率</h2><div class="card"><div class="row"><select data-af="per">${opt([['fy','今年度(4月〜)'],['y','今年(1月〜)'],['3m','直近3か月'],['all','全期間']],S.af.per)}</select><select data-af="ty">${opt([['','すべての予定'],['game','試合(公式戦・練習試合)'],['練習','練習のみ'],['公式戦','公式戦のみ']],S.af.ty)}</select></div>
+<div class="note" style="margin-top:6px">対象: 過去の予定 ${evs.length}件${evs.length?'　/　チーム平均 <b>'+Math.round(avg*100)+'%</b>':''}</div></div>`+
+ (evs.length?`<div class="card">`+rows.map(({p,y,m,n,un,r})=>{const pc=Math.round(r*100);return`<div class="at"><div class="row" style="flex-wrap:nowrap;gap:6px"><span style="flex:1;min-width:0;overflow-wrap:anywhere">${esc(p.no?p.no+' ':'')}${esc(p.name)}${p.id===my?' <small class="mute">(自分)</small>':''}</span><b style="flex:0 0 auto;min-width:0">${pc}%</b></div><div class="bar"><i style="width:${pc}%"></i></div><div class="note" style="margin:0">参加 ${y}　未定 ${m}　不参加 ${n}　未回答 ${un}</div></div>`}).join('')+`</div>`:'<div class="empty">この条件に当てはまる、過去の予定がありません。</div>')+
+ `<p class="note">出席率 = 「○ 参加」の回数 ÷ 対象の予定の数(未回答・△ 未定は、参加に数えません)。今日以降の予定は、含めません。</p>`}
+function statsV(){const tb=`<div class="tabs" style="margin-top:0"><button data-a="stv" data-id="bat" class="${S.stv==='bat'?'on':''}">成績</button><button data-a="stv" data-id="att" class="${S.stv==='att'?'on':''}">出席率</button></div>`;return tb+(S.stv==='att'?attV():statsBat()+pitV())}
+
+/* ===== 部費 ===== */
+function ensurePay(){if(!S.team||!(S.got.meta&&S.got.players))return;
+ const adm=isAdmin(),my=myPid(),key=S.team+'|'+(adm?'A':my||'-');if(key===payKey)return;payKey=key;if(payU){payU();payU=null}
+ const setP=a=>{S.pay=a;draw()};
+ if(!cloud){payU=sub(S.team,'pay',setP);return}
+ const err=()=>{S.feeErr=true;draw()},mk=q=>q.onSnapshot(s=>{S.feeErr=false;setP(s.docs.map(d=>({...d.data(),id:d.id})))},err);
+ if(adm)payU=mk(col(S.team,'pay'));else if(my)payU=mk(col(S.team,'pay').where('pid','==',my));else S.pay=[]}
+const pmk=()=>{PM=new Map(S.pay.map(x=>[x.fid+'|'+x.per+'|'+x.pid,x]))};
+const FK={month:'月払い',year:'年払い',once:'都度払い'};
+const curM=()=>today().slice(0,7);
+function mAdd(k,n){let y=+k.slice(0,4),m=+k.slice(5,7)-1+n;y+=Math.floor(m/12);m=((m%12)+12)%12;return y+'-'+String(m+1).padStart(2,'0')}
+function periodsOf(f){
+ if(f.kind==='once')return['once'];
+ const out=[];
+ if(f.kind==='year'){const cy=+today().slice(0,4),s=+f.start||cy,e=Math.min(+f.end||cy,cy);for(let y=s;y<=e&&out.length<100;y++)out.push(String(y));return out}
+ const cm=curM(),last=f.end&&f.end<cm?f.end:cm;let k=(f.start||cm).slice(0,7);
+ for(let i=0;k<=last&&i<600;i++){out.push(k);k=mAdd(k,1)}return out}
+const perLab=(f,k)=>f.kind==='month'?(+k.slice(0,4))+'年'+(+k.slice(5,7))+'月分':f.kind==='year'?k+'年分':'';
+const dshort=d=>{const m=String(d||'').match(/^\d{4}-(\d{2})-(\d{2})$/);return m?(+m[1])+'/'+(+m[2]):''};
+const targets=f=>S.players.filter(p=>!f.pids||!f.pids.length||f.pids.includes(p.id)).sort((a,b)=>(+a.no||999)-(+b.no||999));
+const unitLab=f=>f.kind==='month'?'/月':f.kind==='year'?'/年':'';
+function feeStat(f){const ps=periodsOf(f),tg=targets(f),per=[];let un=0,paidAmt=0;
+ ps.forEach(k=>{let paid=0,wv=0,u=0;tg.forEach(p=>{const y=PM.get(f.id+'|'+k+'|'+p.id);if(!y)u++;else if(y.st==='paid'){paid++;paidAmt+=+y.amt||0}else wv++});per.push({k,paid,wv,u});un+=u});
+ return{ps,tg,per,un,unAmt:un*(+f.amount||0),paidAmt,cur:per[per.length-1]||null}}
+function unpaidMap(){const m=new Map();S.fees.forEach(f=>{const ps=periodsOf(f);targets(f).forEach(p=>ps.forEach(k=>{if(PM.has(f.id+'|'+k+'|'+p.id))return;const e=m.get(p.id)||{n:0,amt:0};e.n++;e.amt+=+f.amount||0;m.set(p.id,e)}))});return m}
+function payBtns(f,k,pid,st){const id=f.id+':'+k+':'+pid;return`<span class="ar c2"><button class="ab sm y${st==='paid'?' on':''}" data-a="paytog" data-id="${id}">納入済</button><button class="ab sm m${st==='waive'?' on':''}" data-a="paywv" data-id="${id}">免除</button></span>`}
+function stTxt(f,y){const st=y?y.st:'';return st==='paid'?`<small class="mute">${esc(dshort(y.date))} 納入${y.amt!=null&&+y.amt!==+f.amount?' '+yen(y.amt):''}</small>`:st==='waive'?'<small class="mute">免除</small>':`<small style="color:#c62828">未納 ${yen(f.amount)}</small>`}
+function payRowV(f,k,pid,adm,label){const y=PM.get(f.id+'|'+k+'|'+pid),st=y?y.st:'';
+ return`<div class="pa"><span>${label}<br>${stTxt(f,y)}</span>${adm?payBtns(f,k,pid,st):`<span>${st==='paid'?'✓ 済':st==='waive'?'免除':'<b style="color:#c62828">未</b>'}</span>`}</div>`}
+function playerFeeV(pid,adm){const p=S.players.find(x=>x.id===pid);if(!p)return'<div class="empty">選手が見つかりません。</div>';
+ const open=[],done=[];
+ S.fees.forEach(f=>{if(!targets(f).some(x=>x.id===pid))return;periodsOf(f).slice().reverse().forEach(k=>{const y=PM.get(f.id+'|'+k+'|'+pid),it={f,k,y};(y?done:open).push(it)})});
+ const lab=it=>esc(it.f.name)+(perLab(it.f,it.k)?' <span class="mute">'+esc(perLab(it.f,it.k))+'</span>':'');
+ const tot=open.reduce((s,it)=>s+(+it.f.amount||0),0);
+ return`<div class="card"><b>${esc(p.no?p.no+' ':'')}${esc(p.name)}</b><div style="margin-top:4px">${open.length?`<span style="color:#c62828;font-weight:800">未納 ${yen(tot)}</span>　<span class="mute">${open.length}件</span>`:'<span style="color:#2e7d32;font-weight:800">✓ 未納はありません</span>'}</div></div>`+
+ (open.length?`<h2>未納</h2><div class="card">${open.map(it=>payRowV(it.f,it.k,pid,adm,lab(it))).join('')}</div>`:'')+
+ (done.length?`<details class="card"><summary style="cursor:pointer;font-weight:700">納入済み・免除(${done.length}件)</summary><div style="margin-top:6px">${done.map(it=>payRowV(it.f,it.k,pid,adm,lab(it))).join('')}</div></details>`:'')+
+ (!open.length&&!done.length?'<div class="empty">この選手が対象の部費はありません。</div>':'')}
+function feeFormV(){const E=S.fees.find(x=>x.id===S.feeForm)||null,T=E||S.feeTpl||{},k=T.kind||'month',v=x=>esc(T[x]==null?'':T[x]),cm=curM(),cy=today().slice(0,4),sel=new Set(T.pids||[]);
+ return`<div class="card"><h2 style="margin-top:0">${E?'部費の項目を修正':'部費の項目を追加'}</h2>
+<div class="note">名前</div><div class="row"><input id="fn" placeholder="例: 月会費・年会費・ユニフォーム代・遠征費" value="${v('name')}"></div>
+<div class="row" style="margin-top:8px"><select id="fk">${opt(Object.entries(FK),k)}</select><input id="fa" type="number" inputmode="numeric" min="1" placeholder="金額(円)" value="${v('amount')}"></div>
+<div id="fwm"${k==='month'?'':' hidden'}><div class="note" style="margin-top:8px">請求の開始月 / 終了月(終了月は、空欄なら続きます)</div><div class="row"><input id="fsm" type="month" value="${esc(T.kind==='month'&&T.start?T.start:cm)}"><input id="fem" type="month" value="${esc(T.kind==='month'&&T.end?T.end:'')}"></div></div>
+<div id="fwy"${k==='year'?'':' hidden'}><div class="note" style="margin-top:8px">請求の開始年 / 終了年(終了年は、空欄なら続きます)</div><div class="row"><input id="fsy" type="number" inputmode="numeric" value="${esc(T.kind==='year'&&T.start?T.start:cy)}"><input id="fey" type="number" inputmode="numeric" placeholder="終了年" value="${esc(T.kind==='year'&&T.end?T.end:'')}"></div></div>
+<div id="fwo"${k==='once'?'':' hidden'}><div class="note" style="margin-top:8px">支払いの期日(目安)</div><div class="row"><input id="fdo" type="date" value="${esc(T.date||today())}"></div></div>
+<div class="row" style="margin-top:8px"><input id="fno" placeholder="メモ(振込先・支払い方法など)" value="${v('note')}"></div>
+<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">対象の選手(初期値: 全員)</summary><div style="margin-top:6px">${[...S.players].sort((a,b)=>(+a.no||999)-(+b.no||999)).map(p=>`<label class="pa" style="grid-template-columns:auto minmax(0,1fr)"><input type="checkbox" data-fpl="${p.id}" style="width:auto"${!sel.size||sel.has(p.id)?' checked':''}><span>${esc(p.no?p.no+' ':'')}${esc(p.name)}</span></label>`).join('')}</div></details>
+<p class="note" style="margin:8px 0 0">金額が途中で変わるときは、今の項目に「終了月」を入れて、新しい金額の項目を追加してください(過去の分の金額は、そのまま残ります)。</p>
+<div class="row" style="margin-top:8px"><button class="b" data-a="feesave">保存</button><button class="g" data-a="feecancel">キャンセル</button></div></div>`}
+function feeDetV(fid){const f=S.fees.find(x=>x.id===fid);if(!f){S.fv.id='';return''}
+ const st=feeStat(f),ps=st.ps;let per=S.fv.per;if(!ps.includes(per))per=ps[ps.length-1]||'';const cur=st.per.find(x=>x.k===per)||{paid:0,wv:0,u:0},tg=st.tg;
+ let h=`<div class="row" style="margin-bottom:8px"><button class="g" data-a="feeback" style="flex:0 0 auto">← 部費の一覧</button></div>
+<div class="card"><div class="row" style="flex-wrap:nowrap"><b style="flex:1;min-width:0">${esc(f.name)}</b><span class="chip" style="flex:0 0 auto;min-width:0">${FK[f.kind]||''}</span></div>
+<div style="margin-top:4px;font-weight:800">${yen(f.amount)}${unitLab(f)}</div>
+<div class="note">対象 ${tg.length}人${f.kind==='month'?'　'+esc(perLab(f,f.start)||'')+'から'+(f.end?'　'+esc(perLab(f,f.end))+'まで':''):f.kind==='year'?'　開始 '+esc(f.start||'')+'年':f.date?'　期日 '+esc(dshort(f.date)):''}</div>${f.note?`<div class="note">${esc(f.note)}</div>`:''}
+<div class="btng"><button class="g" data-a="feeedit" data-id="${f.id}">✎ 修正</button><button class="g" data-a="feedup" data-id="${f.id}">複製して追加</button><button class="x" data-a="feedel" data-id="${f.id}" style="grid-column:1/3">✕ この項目を削除</button></div></div>`;
+ if(!ps.length)return h+`<div class="empty">まだ請求の開始前です(開始: ${esc(f.start||'')})。</div>`;
+ if(ps.length>1)h+=`<div class="row" style="margin-bottom:8px"><select data-fp="per">${opt(ps.slice().reverse().map(k=>[k,perLab(f,k)]),per)}</select></div>`;
+ h+=`<div class="card"><b>${esc(perLab(f,per)||'納入状況')}</b><div class="note" style="margin:4px 0 0">納入 <b>${cur.paid}</b>人　免除 ${cur.wv}人　<span style="color:#c62828">未納 <b>${cur.u}</b>人(${yen(cur.u*(+f.amount||0))})</span></div>
+${cur.u?`<div class="btng"><button class="g" data-a="feecopy" data-id="${f.id}:${per}">連絡文をコピー</button><button class="g" data-a="feeline" data-id="${f.id}:${per}">未納者へLINE</button></div>`:''}</div>
+<div class="card">${tg.length?tg.map(p=>payRowV(f,per,p.id,true,esc(p.no?p.no+' ':'')+esc(p.name))).join(''):'<div class="mute">対象の選手がいません。</div>'}</div>`;
+ return h}
+function feeUnText(f,per){const un=targets(f).filter(p=>!PM.has(f.id+'|'+per+'|'+p.id)).map(p=>p.name);return'【部費のお願い】'+f.name+(perLab(f,per)?' '+perLab(f,per):'')+' '+yen(f.amount)+'\n未納: '+un.join('、')+'\nお支払いがお済みでない方は、お願いします。'+(f.note?'\n'+f.note:'')}
+function feesTabV(){pmk();const adm=isAdmin(),my=myPid();
+ const warn=S.feeErr?'<div class="card" style="border-color:#c62828;color:#c62828">部費のデータを読み込めません。設定(firestore.rules)の更新が必要かもしれません。管理者に確認してください。</div>':'';
+ if(!adm){
+  let h='<h2 style="margin-top:0">部費</h2>'+warn;
+  if(!my)return h+'<div class="card"><div class="note">背番号が選手マスタにないため、部費の状況を表示できません。管理者に、選手マスタへの登録を依頼してください。</div></div>';
+  h+=playerFeeV(my,false);
+  if(S.fees.length)h+=`<details class="card"><summary style="cursor:pointer;font-weight:700">部費の種類(${S.fees.length})</summary><div style="margin-top:6px">${S.fees.map(f=>`<div class="pa"><span>${esc(f.name)}<br><small class="mute">${FK[f.kind]||''}${f.note?' / '+esc(f.note):''}</small></span><b>${yen(f.amount)}${unitLab(f)}</b></div>`).join('')}</div></details>`;
+  return h+'<p class="note">納入の記録は、管理者(会計係)が付けます。違っているときは、管理者に伝えてください。</p>'}
+ if(S.feeForm)return feeFormV();
+ if(S.fv.id)return feeDetV(S.fv.id);
+ if(S.fv.pid)return`<div class="row" style="margin-bottom:8px"><button class="g" data-a="feeback" style="flex:0 0 auto">← 部費の一覧</button></div>`+playerFeeV(S.fv.pid,true);
+ const um=unpaidMap();let tot=0;um.forEach(e=>{tot+=e.amt});
+ let h=`<h2 style="margin-top:0">部費</h2>${warn}<div class="row" style="margin-bottom:8px"><button class="b" data-a="feenew" style="flex:0 0 auto">＋ 項目を追加</button></div>
+<div class="card"><div class="note" style="margin:0">未収の合計</div><div style="font-size:20px;font-weight:900;color:${tot?'#c62828':'#2e7d32'}">${yen(tot)}</div><div class="note" style="margin:0">${um.size?'未納の人: '+um.size+'人':'未納の人はいません'}</div></div>
+<div class="tabs"><button data-a="fvtab" data-id="item" class="${S.fv.tab==='item'?'on':''}">項目別</button><button data-a="fvtab" data-id="pl" class="${S.fv.tab==='pl'?'on':''}">選手別</button></div>`;
+ if(!S.fees.length)return h+'<div class="empty">まだ部費の項目がありません。「＋ 項目を追加」から、月会費などを登録してください。</div>';
+ if(S.fv.tab==='pl'){
+  h+=`<div class="card">`+[...S.players].sort((a,b)=>(+a.no||999)-(+b.no||999)).map(p=>{const e=um.get(p.id);return`<div class="pa fi" data-a="feepl" data-id="${p.id}"><span>${esc(p.no?p.no+' ':'')}${esc(p.name)}</span>${e?`<b style="color:#c62828;white-space:nowrap">${yen(e.amt)} <small>(${e.n}件)</small></b>`:'<span style="color:#2e7d32;white-space:nowrap">✓ 完納</span>'}</div>`}).join('')+`</div><p class="note">選手をタップすると、その人の部費の一覧が開きます。</p>`;return h}
+ return h+S.fees.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(f=>{const st=feeStat(f),c=st.cur,past=c?st.un-c.u:0;
+  return`<div class="card fi" data-a="feeview" data-id="${f.id}"><div class="row" style="flex-wrap:nowrap"><b style="flex:1;min-width:0">${esc(f.name)}</b><span class="chip" style="flex:0 0 auto;min-width:0">${FK[f.kind]||''}</span></div><div style="margin-top:2px">${yen(f.amount)}${unitLab(f)}　<span class="mute">対象 ${st.tg.length}人</span></div>
+${c?`<div class="note" style="margin-top:4px">${esc(perLab(f,c.k)||'')} <b>納入 ${c.paid}/${st.tg.length}人</b>${c.u?`　<span style="color:#c62828">未納 ${c.u}人</span>`:'　✓ 完納'}</div>${past>0?`<div class="note" style="color:#c62828;margin:0">過去の未納 ${past}件(${yen(past*(+f.amount||0))})</div>`:''}`:`<div class="note" style="margin-top:4px">請求の開始前です(開始: ${esc(f.start||'')})</div>`}</div>`}).join('')}
 function drCancel(){if(DR){clearTimeout(DR.timer);if(DR.row){DR.row.classList.remove('drag');DR.row.style.transform=''}document.querySelectorAll('.lr.over').forEach(r=>r.classList.remove('over'))}DR=null}
 function drBegin(){if(!DR||DR.active)return;DR.active=true;DR.row.classList.add('drag');try{DR.row.setPointerCapture(DR.pid)}catch(x){}try{if(navigator.vibrate)navigator.vibrate(15)}catch(x){}}
 function draw(){
@@ -708,8 +822,9 @@ function draw(){
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.id===S.tab));
  if(!S.team){if(S.page){$('#m').innerHTML=pageV();return}
  $('#m').innerHTML=helpTop()+loginV()+topNews()+helpBtn()+guideBox();return}
+ ensurePay();
  const ae=document.activeElement;if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')&&ae.dataset.sc===undefined&&ae.value)return;
- $('#m').innerHTML=S.tab==='news'?newsTabV():S.tab==='sched'?schedV():S.tab==='games'?(S.gid?gameV():gamesV()):S.tab==='settings'?settingsV():statsV();
+ $('#m').innerHTML=S.tab==='news'?newsTabV():S.tab==='sched'?schedV():S.tab==='fees'?feesTabV():S.tab==='games'?(S.gid?gameV():gamesV()):S.tab==='settings'?settingsV():statsV();
  tg()}
 function updRbi(){const g=S.games.find(x=>x.id===S.gid),sl=$('#rbi'),ii=$('#inn');if(!g||!sl||!ii)return;
  const inn=+ii.value,us=nrm(g.sc&&g.sc.us),au=au9(g),i=inn-1;let mx=4,note;
@@ -811,7 +926,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   if(lu&&!/^https:\/\/(line\.me|lin\.ee)\//.test(lu))return alert('LINEのリンクは、https://line.me/ または https://lin.ee/ で始まるものを入力してください');
   put('meta',{...teamM(),id:'team',name:$('#tnm').value.trim(),sport:$('#tsp').value,inn:+$('#tinn').value||7,lineUrl:lu,pub:npub});
   {const nm=$('#tnm').value.trim()||S.team;if(npub>0)setTimeout(()=>S.games.forEach(g=>{delete pubSig[g.id];pubWrite(g,npub,nm)}),1500);else if(opub>0)S.games.forEach(g=>pubDelete(g.id))}}
- else if(a==='tab'){S.help=false;S.page='';S.tab=id;S.gid=null;S.codes=null;if(id==='news')loadPublic();if(id==='sched'){S.evView=null;S.evForm=null}draw()}
+ else if(a==='tab'){if(id==='fees'){S.fv.id='';S.fv.pid='';S.feeForm=null;S.feeTpl=null}S.help=false;S.page='';S.tab=id;S.gid=null;S.codes=null;if(id==='news')loadPublic();if(id==='sched'){S.evView=null;S.evForm=null}draw()}
  else if(a==='newgame'){const d=today(),o={id:uid(),date:d,opp:'',type:'practice',tourn:'',season:d.slice(0,4),slots:[],sc:{us:Array(9).fill(null),them:Array(9).fill(null)},auto:Array(9).fill(false),autoT:Array(9).fill(false),dec:{},bat:'top',setup:true};put('games',o);S.gid=o.id;S.sub='in';draw();window.scrollTo(0,0)}
  else if(a==='setbat'){if(g)put('games',{...g,bat:id})}
  else if(a==='lockorder'){if(g&&slotsOf(g).length)put('games',{...g,locked:true})}
@@ -893,6 +1008,33 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   if(!isAdmin()&&pid!==myPid())return alert('出欠は、自分の分だけ入力できます');
   const ev0=S.events.find(x=>x.id===eid);if(ev0&&(ev0.date||'')<today())return alert('過去の予定の出欠は、変更できません');
   if(cur&&cur.v===v)del('att',aid);else put('att',{id:aid,eid,pid,v,by:myPid(),t:Date.now()})}
+ else if(a==='stv'){S.stv=id;draw()}
+ else if(a==='feenew'){S.feeForm='new';S.feeTpl=null;draw();window.scrollTo(0,0)}
+ else if(a==='feeedit'){S.feeForm=id;draw();window.scrollTo(0,0)}
+ else if(a==='feedup'){const f=S.fees.find(x=>x.id===id);if(f){S.feeTpl={...f,name:f.name+'(コピー)'};S.feeForm='new';draw();window.scrollTo(0,0)}}
+ else if(a==='feecancel'){S.feeForm=null;S.feeTpl=null;draw()}
+ else if(a==='feesave'){const name=$('#fn').value.trim(),kind=$('#fk').value,amount=Math.floor(+$('#fa').value||0);
+  if(!name)return alert('名前を入力してください');if(amount<=0)return alert('金額を入力してください');
+  let start='',end='',date='';
+  if(kind==='month'){start=$('#fsm').value;end=$('#fem').value;if(!start)return alert('開始月を入力してください');if(end&&end<start)return alert('終了月は、開始月と同じか、それより後にしてください')}
+  else if(kind==='year'){start=String(Math.floor(+$('#fsy').value||0));end=$('#fey').value?String(Math.floor(+$('#fey').value)):'';if(!(+start>=2000))return alert('開始年を入力してください');if(end&&+end<+start)return alert('終了年は、開始年と同じか、それより後にしてください')}
+  else date=$('#fdo').value;
+  const cb=[...document.querySelectorAll('[data-fpl]')],on=cb.filter(x=>x.checked).map(x=>x.dataset.fpl);
+  if(!on.length)return alert('対象の選手を、1人以上選んでください');
+  const fid=S.feeForm==='new'?uid():S.feeForm;
+  put('fees',{id:fid,name,kind,amount,start,end,date,note:$('#fno').value.trim(),pids:on.length===cb.length?[]:on,t:Date.now()});
+  S.feeForm=null;S.feeTpl=null;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();draw();window.scrollTo(0,0)}
+ else if(a==='feedel'){const f=S.fees.find(x=>x.id===id);if(!f)return;const n=S.pay.filter(x=>x.fid===id).length;
+  if(!confirm('「'+f.name+'」を削除しますか?\n納入の記録('+n+'件)も、すべて消えます。元に戻せません。'))return;
+  S.pay.filter(x=>x.fid===id).forEach(x=>del('pay',x.id));del('fees',id);S.fv.id='';draw()}
+ else if(a==='feeview'){S.fv.id=id;S.fv.per='';draw();window.scrollTo(0,0)}
+ else if(a==='feepl'){S.fv.pid=id;draw();window.scrollTo(0,0)}
+ else if(a==='feeback'){S.fv.id='';S.fv.pid='';draw();window.scrollTo(0,0)}
+ else if(a==='fvtab'){S.fv.tab=id;draw()}
+ else if(a==='paytog'||a==='paywv'){const[fid,per,pid]=id.split(':'),f=S.fees.find(x=>x.id===fid);if(!f)return;
+  const did=fid+'_'+per+'_'+pid,cur=S.pay.find(x=>x.id===did),want=a==='paytog'?'paid':'waive';
+  if(cur&&cur.st===want)del('pay',did);else put('pay',{id:did,fid,per,pid,st:want,amt:want==='paid'?(+f.amount||0):0,date:today(),by:myPid(),t:Date.now()})}
+ else if(a==='feecopy'||a==='feeline'){const[fid,per]=id.split(':'),f=S.fees.find(x=>x.id===fid);if(!f)return;pmk();const tx=feeUnText(f,per);if(a==='feecopy')copyText(tx,'コピーしました。LINEなどに貼り付けてください');else lineShare(tx)}
  else if(a==='evgame'){const[eid,ks]=id.split(':'),e=S.events.find(x=>x.id===eid),k=+ks||0;if(!e)return;const gs=evGames(e).map(x=>({...x})),gm=gs[k];if(!gm)return;
   if(gm.gid&&S.games.some(x=>x.id===gm.gid)){S.tab='games';S.gid=gm.gid;S.sub=isAdmin()?'in':'live';draw();return}
   if(!isAdmin())return alert('この操作は、管理者のみ行えます');
@@ -955,6 +1097,9 @@ document.addEventListener('change',e=>{const t=e.target,g=S.games.find(x=>x.id==
   s.pos=t.value;saveSlots(g,L2)}
  else if(t.dataset.su!==undefined&&g){const k=t.dataset.su;put('games',{...g,[k]:t.value,...(k==='date'?{season:String(t.value).slice(0,4)}:{})})}
  else if(t.dataset.plv){const p=S.players.find(x=>x.id===t.dataset.plv);if(p)put('players',{...p,level:t.value})}
+ else if(t.dataset.af){S.af[t.dataset.af]=t.value;draw()}
+ else if(t.dataset.fp){S.fv.per=t.value;draw()}
+ else if(t.id==='fk'){const k=t.value;$('#fwm').hidden=k!=='month';$('#fwy').hidden=k!=='year';$('#fwo').hidden=k!=='once'}
  else if(t.dataset.f){S.f[t.dataset.f]=t.value;draw()}
  else if(t.dataset.scs!==undefined){S.scSel[+t.dataset.scs]=t.value}
  else if(t.dataset.imp!==undefined){const[ii,f]=t.dataset.imp.split(':'),r=S.imp&&S.imp.rows[+ii];if(r)r[f]=f==='on'?t.checked:t.value}
@@ -987,7 +1132,7 @@ if(typeof location!=='undefined'&&location.hash==='#help')S.help=true;
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261109173125';
+const APP_VER='20261110094501';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false;const rf=$('#rf');if(rf){rf.classList.add('new');rf.textContent='🔄 最新版に更新'}}return m?m[1]:''}catch(e){}}
