@@ -6,9 +6,9 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="成績表">
+<meta name="apple-mobile-web-app-title" content="チームマネージャー">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>やきう・ソフトボール成績表</title>
+<title>チームマネージャー</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -120,7 +120,7 @@ table.sc{width:100%;table-layout:fixed;border-collapse:collapse}
 nav button{font-size:13px;white-space:nowrap;padding:14px 0}
 </style></head><body>
 <div id="top"><header><b id="ttl"></b><button id="rf" data-a="reload" title="最新版に更新">🔄 更新</button></header>
-<nav id="nv" hidden><button data-a="tab" data-id="sched">予定</button><button data-a="tab" data-id="games">試合</button><button data-a="tab" data-id="stats">集計</button><button data-a="tab" data-id="fees">部費</button><button data-a="tab" data-id="news">ニュース</button><button data-a="tab" data-id="settings">⚙ 設定</button></nav></div>
+<nav id="nv" hidden><button data-a="tab" data-id="sched">予定</button><button data-a="tab" data-id="games">試合</button><button data-a="tab" data-id="stats">集計</button><button data-a="tab" data-id="fees">会計</button><button data-a="tab" data-id="news">ニュース</button><button data-a="tab" data-id="settings">⚙ 設定</button></nav></div>
 <div id="upd" hidden data-a="reload">新しいバージョンがあります。ここをタップして更新してください</div>
 <div id="off" hidden>オフラインです。入力は端末に保存され、電波が戻ると自動で同期されます</div>
 <main id="m"></main>
@@ -394,7 +394,7 @@ function helpV(){return`<div class="row" style="margin-bottom:8px;flex-wrap:nowr
 <div class="hh">3. 管理者を増やす</div><ol><li>選手マスタで、その人の「操作レベル」を「管理者」にします。</li><li>その人に、管理者用の合言葉を伝えます。</li><li>その人が、「⚙ 設定」の「この端末の権限」に、管理者用の合言葉を入力して、「認証」を押します(参加するときに、「管理者用の合言葉」の欄に入れても構いません)。</li></ol><div class="note">すでにあるチームで、管理者機能をまだ有効にしていない場合は、設定の「この端末の権限」から、有効にできます(最初に押した人が、オーナーになります)。</div>
 <div class="hh">メンバー・管理者への案内文(例)</div><div class="note">長押しして、コピーしてお使いください。「○○」の部分は、チームの内容に書き換えます。</div>
 <div class="note" style="margin-top:6px"><b>① メンバー全員への案内</b></div><div class="tpl">【成績・予定アプリのご案内】
-アプリ: https://shallotou.github.io/yakiu-scorebook/
+アプリ: https://yakiuscorebook.web.app/
 チームID: ○○○○
 合言葉: ○○○○
 1. 上のURLを開きます(ホーム画面に追加すると、アプリのように使えます)
@@ -407,7 +407,7 @@ function helpV(){return`<div class="row" style="margin-bottom:8px;flex-wrap:nowr
 ※この合言葉は、他の人に教えないでください。端末を替えたときは、もう一度入力が必要です。</div>
 <div class="hh">4. 一般と管理者の違い</div><ul><li><b>一般</b>: 予定・試合・成績・集計を見る。自分の出欠を入力する。</li><li><b>管理者</b>: 上に加えて、予定・試合・成績・選手マスタ・チームマスタの編集。他の人の出欠の代理入力。</li></ul>
 <div class="hh">5. ふだんの使い方</div><ul><li><b>予定と出欠</b>: 「予定」タブ →「＋予定を追加」(管理者)。メンバーは、予定をタップして、○参加 / △未定 / ×不参加を選びます。「LINEで共有」「内容をコピー」で、グループLINEに連絡できます。</li><li><b>試合を記録する(管理者)</b>: 「試合」タブの「＋試合を作成」(または、予定の「試合を作成」)を押し、①対戦相手 ②先攻/後攻 ③打順を決めて、「打順を確定して、成績入力へ」を押します。そのあと、「入力」タブで、①打席を入力 ②走塁・得点を入力 ③「投手」タブで、回ごとの投手成績を入力します。得点は、未入力でも構いません(打点を入れると、自動で加算されます)。</li><li><b>打順の並べ替え</b>: PCは「≡」をドラッグします。スマホは、選手の名前の部分を、約0.5秒長押ししてから、上下にドラッグします(触れただけでは動きません)。「打順を確定」すると、並べ替えや追加・削除ができなくなります。「確定を解除して編集する」で戻せます。代打・守備交代は、確定後も使えます。</li><li><b>代打・守備交代</b>: 「選手交代」「守備位置の入れ替え」で行います。間違えたときは、「交代の履歴」の「取消」を押します。</li><li><b>間違えたとき</b>: 「入力済み」の「✎」で直し、「✕」で消します。</li><li><b>見る</b>: 試合の「速報」「成績」「スコアブック」と、「集計」タブ。</li></ul>
-<div class="hh">6. 出席率と部費</div><ul><li><b>出席率</b>: 「集計」タブの「出席率」で、選手ごとの出席率を見られます。出席率 = ○(参加)の回数 ÷ 過去の予定の数です。期間(今年度・今年・直近3か月・全期間)と、予定の種類(試合・練習など)で絞れます。</li><li><b>部費(管理者)</b>: 「部費」タブの「＋ 項目を追加」で、月会費(月払い)・年会費(年払い)・遠征費やユニフォーム代(都度払い)を登録します。項目を開き、納入した人の「納入済」を押すと記録されます(もう一度押すと取り消し)。事情があって払わない人は「免除」にします。「連絡文をコピー」「未納者へLINE」で、未納者へ連絡できます。「選手別」では、人ごとの未納を確認できます。</li><li><b>部費(一般)</b>: 「部費」タブに、自分の未納・納入済みだけが表示されます。他の人の分は見られません。</li></ul>
+<div class="hh">6. 出席率と会計(部費)</div><ul><li><b>出席率</b>: 「集計」タブの「出席率」で、選手ごとの出席率を見られます。出席率 = ○(参加)の回数 ÷ 過去の予定の数です。期間(今年度・今年・直近3か月・全期間)と、予定の種類(試合・練習など)で絞れます。</li><li><b>部費(管理者)</b>: 「会計」タブの「＋ 項目を追加」で、月会費(月払い)・年会費(年払い)・遠征費やユニフォーム代(都度払い)を登録します。項目を開き、納入した人の「納入済」を押すと記録されます(もう一度押すと取り消し)。事情があって払わない人は「免除」にします。「連絡文をコピー」「未納者へLINE」で、未納者へ連絡できます。「選手別」では、人ごとの未納を確認できます。</li><li><b>部費(一般)</b>: 「会計」タブに、自分の未納・納入済みだけが表示されます。他の人の分は見られません。</li></ul>
 <div class="hh">7. ニュースとご要望・試合結果の公開</div><ul><li><b>ニュース</b>: 運営からのお知らせと、他のチームの試合結果の更新が出ます(「ニュース」タブ)。</li><li><b>ご要望</b>: 改善してほしい点を、匿名で投稿できます。投稿は、すべての利用者に公開されます。</li><li><b>試合結果の公開(管理者)</b>: 「⚙ 設定」のチームマスタで、「公開しない」「試合結果のみ」「イニングスコアまで」を選べます。選手名と個人成績は、公開されません。初期設定は、公開しない です。</li></ul>
 <div class="hh">8. 困ったとき</div><ul><li><b>合言葉を忘れた</b>: 管理者が、「⚙ 設定」の「合言葉の確認・変更」で、確認できます。</li><li><b>端末をなくした(オーナー)</b>: ログイン画面の「オーナーの方はこちら」から、メールでログインします。</li><li><b>画面が古い</b>: 画面の上に青い帯が出たら、タップして更新します。</li><li><b>ホーム画面に追加したい</b>: 「ホーム画面への追加方法」を見てください(ログイン画面・予定・設定の下にあります)。</li></ul>
 ${S.team?'':`<button class="g" style="width:100%;margin-top:10px" data-a="helpback">← トップページ(ログイン画面)に戻る</button>`}
@@ -793,7 +793,7 @@ function feeUnText(f,per){const un=targets(f).filter(p=>!PM.has(f.id+'|'+per+'|'
 function feesTabV(){pmk();const adm=isAdmin(),my=myPid();
  const warn=S.feeErr?'<div class="card" style="border-color:#c62828;color:#c62828">部費のデータを読み込めません。設定(firestore.rules)の更新が必要かもしれません。管理者に確認してください。</div>':'';
  if(!adm){
-  let h='<h2 style="margin-top:0">部費</h2>'+warn;
+  let h='<h2 style="margin-top:0">会計(部費)</h2>'+warn;
   if(!my)return h+'<div class="card"><div class="note">背番号が選手マスタにないため、部費の状況を表示できません。管理者に、選手マスタへの登録を依頼してください。</div></div>';
   h+=playerFeeV(my,false);
   if(S.fees.length)h+=`<details class="card"><summary style="cursor:pointer;font-weight:700">部費の種類(${S.fees.length})</summary><div style="margin-top:6px">${S.fees.map(f=>`<div class="pa"><span>${esc(f.name)}<br><small class="mute">${FK[f.kind]||''}${f.note?' / '+esc(f.note):''}</small></span><b>${yen(f.amount)}${unitLab(f)}</b></div>`).join('')}</div></details>`;
@@ -802,7 +802,7 @@ function feesTabV(){pmk();const adm=isAdmin(),my=myPid();
  if(S.fv.id)return feeDetV(S.fv.id);
  if(S.fv.pid)return`<div class="row" style="margin-bottom:8px"><button class="g" data-a="feeback" style="flex:0 0 auto">← 部費の一覧</button></div>`+playerFeeV(S.fv.pid,true);
  const um=unpaidMap();let tot=0;um.forEach(e=>{tot+=e.amt});
- let h=`<h2 style="margin-top:0">部費</h2>${warn}<div class="row" style="margin-bottom:8px"><button class="b" data-a="feenew" style="flex:0 0 auto">＋ 項目を追加</button></div>
+ let h=`<h2 style="margin-top:0">会計(部費)</h2>${warn}<div class="row" style="margin-bottom:8px"><button class="b" data-a="feenew" style="flex:0 0 auto">＋ 項目を追加</button></div>
 <div class="card"><div class="note" style="margin:0">未収の合計</div><div style="font-size:20px;font-weight:900;color:${tot?'#c62828':'#2e7d32'}">${yen(tot)}</div><div class="note" style="margin:0">${um.size?'未納の人: '+um.size+'人':'未納の人はいません'}</div></div>
 <div class="tabs"><button data-a="fvtab" data-id="item" class="${S.fv.tab==='item'?'on':''}">項目別</button><button data-a="fvtab" data-id="pl" class="${S.fv.tab==='pl'?'on':''}">選手別</button></div>`;
  if(!S.fees.length)return h+'<div class="empty">まだ部費の項目がありません。「＋ 項目を追加」から、月会費などを登録してください。</div>';
@@ -815,7 +815,7 @@ function drCancel(){if(DR){clearTimeout(DR.timer);if(DR.row){DR.row.classList.re
 function drBegin(){if(!DR||DR.active)return;DR.active=true;DR.row.classList.add('drag');try{DR.row.setPointerCapture(DR.pid)}catch(x){}try{if(navigator.vibrate)navigator.vibrate(15)}catch(x){}}
 function draw(){
  if(DR&&DR.active)return;
- $('#ttl').textContent=S.team?(tname()||S.team):'やきう・ソフトボール成績表';document.title=$('#ttl').textContent;
+ $('#ttl').textContent=S.team?(tname()||S.team):'チームマネージャー';document.title=$('#ttl').textContent;
  if(S.team&&S.appName!==$('#ttl').textContent){S.appName=$('#ttl').textContent;setAppName(S.appName)}$('#nv').hidden=!S.team;
  if(!S.ready){$('#m').innerHTML='<div class="empty">読み込み中…</div>';return}
  if(S.help){$('#m').innerHTML=helpV();return}
@@ -1132,7 +1132,7 @@ if(typeof location!=='undefined'&&location.hash==='#help')S.help=true;
 boot();
 if(typeof location!=='undefined'&&/^https?:/.test(location.protocol)){setTimeout(checkUpdate,4000);setInterval(checkUpdate,300000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()})}
 
-const APP_VER='20261110094501';
+const APP_VER='20261111114844';
 async function checkUpdate(){try{if(typeof fetch==='undefined'||(typeof navigator!=='undefined'&&navigator.onLine===false))return;
  const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text(),m=t.match(/const APP_VER='([^']+)'/);
  if(m&&m[1]!==APP_VER){const u=$('#upd');if(u)u.hidden=false;const rf=$('#rf');if(rf){rf.classList.add('new');rf.textContent='🔄 最新版に更新'}}return m?m[1]:''}catch(e){}}
