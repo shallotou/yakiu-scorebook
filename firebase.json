@@ -1,1 +1,11 @@
+{
+  "hosting": {
+    "site": "yakiuscorebook",
+    "public": ".",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "*.md", "firestore.rules", ".github/**", "hosting/**"],
+    "headers": [
+      { "source": "**/*.@(html|js|webmanifest)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  }
+}
 
