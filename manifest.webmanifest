@@ -1,7 +1,7 @@
 {
-  "name": "やきう・ソフトボール成績表",
-  "short_name": "成績表",
-  "description": "ソフトボールの打席・投手成績を記録するアプリ",
+  "name": "チームマネージャー",
+  "short_name": "チーム管理",
+  "description": "チームの予定・出欠・成績・会計を管理するアプリ",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",
